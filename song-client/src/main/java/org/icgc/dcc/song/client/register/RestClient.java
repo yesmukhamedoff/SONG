@@ -18,38 +18,43 @@
  */
 package org.icgc.dcc.song.client.register;
 
+import lombok.val;
 import org.icgc.dcc.song.client.cli.Status;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
-
-import lombok.val;
 
 /**
- * 
+ *
  */
 public class RestClient {
 
-  private RestTemplate rest;
+  private ModifiedRestTemplate rest;
 
-  RestClient() {
-    this.rest = new RestTemplate();
+  public RestClient(ModifiedRestTemplate rest) {
+    this.rest = rest;
   }
 
-  Status get(String url) {
+  public RestClient() {
+    this(new ModifiedRestTemplate());
+  }
+
+  public Status get(String url) {
     val status = new Status();
-    val response = rest.getForEntity(url, String.class);
-    if (response.getStatusCode() == HttpStatus.OK) {
-      if (response.getBody() == null) {
-        status.err("Null response from server");
+    try{
+      val response = rest.getForEntity(url, String.class);
+      if (response.getStatusCode() == HttpStatus.OK) {
+        if (response.getBody() == null) {
+          status.err("Null response from server");
+        } else {
+          status.output(response.getBody());
+        }
       } else {
-        status.output(response.getBody().toString());
+        status.err(response.getBody());
       }
-    } else {
-      status.err(response.toString());
+    } catch(Exception e){
+      status.err(e.toString());
     }
     return status;
   }
@@ -65,21 +70,34 @@ public class RestClient {
     headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
     HttpEntity<String> entity = new HttpEntity<String>(json, headers);
 
-    val response = rest.postForEntity(url, entity, String.class);
-    if (response.getStatusCode() == HttpStatus.OK && response.hasBody()) {
-      status.output(response.getBody());
-    } else {
-      status.err(response.toString());
+    try {
+      val response = rest.postForEntity(url, entity, String.class);
+      if (response.getStatusCode() == HttpStatus.OK && response.hasBody()) {
+        status.output(response.getBody());
+      } else {
+        status.err(response.getBody());
+      }
+    } catch (Exception e){
+      status.err(e.toString());
     }
+
     return status;
   }
 
   public Status put(String url, String json) {
     Status status = new Status();
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
+    HttpEntity<String> entity = new HttpEntity<String>(json, headers);
     try {
-      rest.put(url, json);
-    } catch (RestClientException e) {
-      status.err(e.getMessage());
+      val response = rest.putForEntity(url,entity, String.class);
+      if (response.getStatusCode() == HttpStatus.OK && response.hasBody()) {
+        status.output(response.getBody());
+      } else {
+        status.err(response.getBody());
+      }
+    } catch (Exception e) {
+      status.err(e.toString());
     }
     return status;
   }
