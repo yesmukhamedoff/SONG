@@ -1,21 +1,3 @@
-/*
- * Copyright (c) 2017 The Ontario Institute for Cancer Research. All rights reserved.
- *
- * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
- * You should have received a copy of the GNU General Public License along with
- * this program. If not, see <http://www.gnu.org/licenses/>.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
- * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
- * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
- * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- */
 package org.icgc.dcc.song.server.security;
 
 import lombok.NonNull;
@@ -32,12 +14,12 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 
 @Slf4j
-public class StudyScopeStrategy {
+public class DownloadStudyScopeStrategy {
 
   private static final String SCOPE_STRATEGY = "song.%s.%s";
 
-  @Value("${auth.server.uploadScope}")
-  protected String uploadScope;
+  @Value("${auth.server.downloadScope}")
+  protected String downloadScope;
 
   public boolean authorize(@NonNull Authentication authentication, @NonNull final String studyId) {
     log.info("Checking authorization with study id {}", studyId);
@@ -53,11 +35,11 @@ public class StudyScopeStrategy {
   }
 
   protected void setAuthorizeScope(String scopeStr) {
-    uploadScope = scopeStr;
+    downloadScope = scopeStr;
   }
 
   protected String getAuthorizeScope() {
-    return uploadScope;
+    return downloadScope;
   }
 
   private Set<String> getScopes(@NonNull OAuth2Authentication o2auth) {
@@ -65,9 +47,10 @@ public class StudyScopeStrategy {
   }
 
   private boolean verify(@NonNull Set<String> grantedScopes, @NonNull final String studyId) {
-    val strategy = format(SCOPE_STRATEGY, studyId.toUpperCase(), uploadScope);
+    val strategy = format(SCOPE_STRATEGY, studyId.toUpperCase(), downloadScope);
     val check = grantedScopes.stream().filter(s -> s.equals(strategy)).collect(toList());
     return !check.isEmpty();
   }
+
 
 }

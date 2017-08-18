@@ -18,7 +18,7 @@
  */
 package org.icgc.dcc.song.server.config;
 
-import org.icgc.dcc.song.server.security.StudyScopeStrategy;
+import org.icgc.dcc.song.server.security.UploadStudyScopeStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.context.ApplicationContext;
@@ -58,8 +58,8 @@ public class MethodSecurityConfig extends GlobalMethodSecurityConfiguration {
   }
 
   @Bean
-  public StudyScopeStrategy studySecurity() {
-    return new StudyScopeStrategy();
+  public UploadStudyScopeStrategy studySecurity() {
+    return new UploadStudyScopeStrategy();
   }
 
 }

@@ -37,6 +37,9 @@ public class SecurityConfig extends ResourceServerConfigurerAdapter {
   @Value("${auth.server.uploadScope}")
   private String uploadScope;
 
+  @Value("${auth.server.downloadScope}")
+  private String downloadScope;
+
   @Override
   @SneakyThrows
   public void configure(HttpSecurity http) {
