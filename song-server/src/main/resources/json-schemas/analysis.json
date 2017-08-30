@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Analysis Schema",
+  "type": "object",
+  "required": ["study", "analysisType","experiment","sample","file"],
+  "allOf": [
+    { "$ref": "json-schemas/core.json#/definitions" },
+    { "$ref": "json-schemas/analysisTypes/analysisTypes.json#/definitions"}
+  ]
+}
+

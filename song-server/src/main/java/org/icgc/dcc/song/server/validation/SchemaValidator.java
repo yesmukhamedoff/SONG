@@ -34,17 +34,14 @@ import java.util.Map;
  */
 @Slf4j
 public class SchemaValidator {
-
   @Autowired
-  private Map<String, JsonSchema> schemaCache;
+  private JsonSchema schema;
 
   @Autowired(required = false)
   private Long validationDelayMs = -1L;
 
   @SneakyThrows
   public ValidationResponse validate(String schemaId, JsonNode payloadRoot) {
-    if (schemaCache.containsKey(schemaId)) {
-      val schema = schemaCache.get(schemaId);
       val results = schema.validate(payloadRoot);
       val response = new ValidationResponse(results);
       log.info(response.getValidationErrors());
@@ -52,10 +49,6 @@ public class SchemaValidator {
       debugDelay();
 
       return response;
-    } else {
-      // log to database
-      throw new IllegalArgumentException("Internal Error: could not find specified schema " + schemaId);
-    }
   }
 
   /**

@@ -34,6 +34,7 @@ id:
   realIds: false
 
 validation:
+  schema: "json-schemas/analysis.json"
   threads:
     core: 5
     max: 10

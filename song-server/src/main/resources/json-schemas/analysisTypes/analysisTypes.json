@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Analysis Types",
+  "description": "The sub-schemas for each analysis type go below.",
+  "definitions": {
+    "oneOf": [
+      {
+        "$ref": "json-schemas/analysisTypes/sequencingRead.json#/definitions"
+      },
+      {
+        "$ref": "json-schemas/analysisTypes/variantCall.json#/definitions"
+      }
+    ]
+  }
+}

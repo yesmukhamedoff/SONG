@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "SequencingRead",
+  "definitions": {
+    "properties": {
+      "analysisType": {
+        "type": "string",
+        "pattern": "^sequencingRead$"
+      },
+      "experiment": {
+        "type": "object",
+        "properties": {
+          "aligned": {
+            "type": "boolean"
+          },
+          "alignmentTool": {
+            "type": "string"
+          },
+          "insertSize": {
+            "type": "integer"
+          },
+          "libraryStrategy": {
+            "type": "string",
+            "enum": [
+              "WGS",
+              "WXS",
+              "RNA-Seq",
+              "ChIP-Seq",
+              "miRNA-Seq",
+              "Bisulfite-Seq",
+              "Validation",
+              "Amplicon",
+              "Other"
+            ]
+          },
+          "pairedEnd": {
+            "type": "boolean"
+          },
+          "referenceGenome": {
+            "type": "string"
+          },
+          "info": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "aligned",
+          "alignmentTool",
+          "insertSize",
+          "libraryStrategy",
+          "pairedEnd",
+          "referenceGenome"
+        ]
+      }
+    }
+  }
+}
+

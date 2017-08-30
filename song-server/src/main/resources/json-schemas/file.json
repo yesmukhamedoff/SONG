@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "File Properties",
+  "definitions": {
+    "type": "array",
+    "items": {
+      "type": "object",
+      "properties": {
+        "fileName": {
+          "type": "string"
+        },
+        "fileSize": {
+          "type": "integer"
+        },
+        "fileType": {
+          "type": "string",
+          "enum": [
+            "FASTA",
+            "FAI",
+            "FASTQ",
+            "BAM",
+            "BAI",
+            "VCF",
+            "TBI",
+            "IDX",
+            "XML"
+          ]
+        },
+        "fileMd5sum": {
+          "type": "string"
+        },
+        "info": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "fileName",
+        "fileSize",
+        "fileType",
+        "fileMd5sum"
+      ]
+    },
+    "minItems": 1,
+    "uniqueItems": true
+  }
+}

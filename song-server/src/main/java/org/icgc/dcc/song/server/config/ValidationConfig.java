@@ -31,7 +31,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-
+import static java.lang.String.format;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -39,9 +39,8 @@ import java.util.Map;
 @Configuration
 @Data
 public class ValidationConfig {
-
-  private static String[] schemaList =
-      {"schemas/sequencingRead.json", "schemas/variantCall.json" };
+  @Value("${validation.schema:json-schemas/analysis.json}")
+  private String schemaFile;
 
   @Value("${validation.delayMs:500}")
   private long validationDelay;
@@ -52,25 +51,15 @@ public class ValidationConfig {
   }
 
   @Bean
-  @Profile("test")
-  public Long validationDelayMs(){
-    return getValidationDelay();
+  public JsonSchema JsonSchema() {
+    log.error(format("Loading schema from '%s'", schemaFile));
+    return JsonSchemaUtils.getJsonSchemaFromClasspath(schemaFile);
   }
 
   @Bean
-  @SneakyThrows
-  public Map<String, JsonSchema> schemaCache() {
-    val cache = new HashMap<String, JsonSchema>();
-    // TODO: Arrays.stream(schemaList)
-    for (val schema : schemaList) {
-      log.debug("Loading schema {}", schema);
-      JsonNode node = JsonDocUtils.getJsonNodeFromClasspath(schema);
-      cache.put(JsonSchemaUtils.getSchemaId(node), JsonSchemaUtils.getJsonSchema(node));
-    }
-    for (val s : cache.keySet()) {
-      log.info(s);
-    }
-    return cache;
+  @Profile("test")
+  public Long validationDelayMs(){
+    return getValidationDelay();
   }
 
 }

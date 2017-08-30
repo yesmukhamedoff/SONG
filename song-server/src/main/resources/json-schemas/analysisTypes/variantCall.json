@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Variant Call Analysis",
+  "definitions": {
+    "properties": {
+      "analysisType": {
+        "type": "string",
+        "pattern": "^variantCall$"
+      },
+      "experiment": {
+        "properties": {
+          "matchedNormalSampleSubmitterId": {
+            "type": "string"
+          },
+          "variantCallingTool": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

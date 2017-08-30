@@ -21,9 +21,14 @@ package org.icgc.dcc.song.server.validation;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.InputStream;
-import java.util.Set;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.stream.Collectors;
 
 //import org.junit.Before;
+//import com.sun.tools.javac.util.List;
+import java.util.List;
+import lombok.SneakyThrows;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -39,66 +44,92 @@ import lombok.extern.slf4j.Slf4j;
 public class schemaValidationTests {
 
   @Test
-  public void validate_submit_sequencing_read_happy_path() throws Exception {
-    val errors =
-        validate("schemas/sequencingRead.json", "documents/sequencingread-valid.json");
-    assertThat(errors.size()).isEqualTo(0);
+  public void validate_submit_sequencing_read_happy_path() {
+    val errors = validate("json-schemas/analysis.json", "documents/sequencingread-valid.json");
+
+    assertThat(errors.isEmpty());
   }
 
   @Test
-  public void validate_submit_sequencing_read_missing_required() throws Exception {
-    val errors = validate("schemas/sequencingRead.json",
+  public void validate_submit_variant_call_invalid_enum() {
+    val errors = validate("json-schemas/analysis.json", "documents/variantcall-invalid-enum.json");
+    val paths = getPaths(errors);
+
+    assertThat(paths).isEqualTo(list(
+        "$.sample[0].donor.donorGender",
+        "$.sample[0].sampleType",
+        "$.sample[0].specimen.specimenType",
+        "$.sample[0].specimen.specimenClass")
+    );
+  }
+
+  private List<String> getPaths(List<ValidationMessage> errors) {
+    return errors.stream().map(ValidationMessage::getPath).collect(Collectors.toList());
+  }
+
+
+  @Test
+  public void validate_submit_sequencing_read_missing_required()  {
+    val errors = validate("json-schemas/analysis.json",
             "documents/sequencingread-missing-required.json");
-    assertThat(errors.size()).isEqualTo(2);
+    val paths = errors.stream().map(ValidationMessage::getPath).collect(Collectors.toList());
+    assertThat(paths).isEqualTo(list( "$.file[0]", "$", "$.sample[0]"));
   }
 
   @Test
-  public void validate_submit_sequencing_read_invalid_enum() throws Exception {
+  public void validate_submit_sequencing_read_invalid_enum()  {
     val errors =
-        validate("schemas/sequencingRead.json", "documents/sequencingread-invalid-enum.json");
-    assertThat(errors.size()).isEqualTo(4);
+        validate("json-schemas/analysis.json", "documents/sequencingread-invalid-enum.json");
+    val paths = errors.stream().map(f->{return f.getPath();}).collect(Collectors.toList());
+
+    assertThat(paths).isEqualTo(list(
+        "$.sample[0].donor.donorGender",
+        "$.sample[0].sampleType",
+        "$.sample[0].specimen.specimenType",
+        "$.sample[0].specimen.specimenClass"));
   }
 
   @Test
-  public void validate_submit_variant_call_happy_path() throws Exception {
-    val errors = validate("schemas/variantCall.json", "documents/variantcall-valid.json");
-    assertThat(errors.size()).isEqualTo(0);
+  public void validate_submit_variant_call_happy_path()  {
+    val errors = validate("json-schemas/analysis.json", "documents/variantcall-valid.json");
+    assertThat(errors.isEmpty());
   }
 
   @Test
-  public void validate_submit_variant_call_missing_required() throws Exception {
+  public void validate_submit_variant_call_missing_required()  {
     val errors =
-        validate("schemas/variantCall.json", "documents/variantcall-missing-required.json");
-    assertThat(errors.size()).isEqualTo(3);
+        validate("json-schemas/analysis.json", "documents/variantcall-missing-required.json");
+    val paths = errors.stream().map(f->{return f.getPath();}).collect(Collectors.toList());
+    assertThat(paths).isEqualTo(list( "$", "$", "$.sample[0]"));
+
   }
 
-  @Test
-  public void validate_submit_variant_call_invalid_enum() throws Exception {
-    val errors =
-        validate("schemas/variantCall.json", "documents/variantcall-invalid-enum.json");
-    assertThat(errors.size()).isEqualTo(4);
+  private <T> List<T> list(T... values) {
+    return Arrays.asList(values);
   }
 
-  protected Set<ValidationMessage> validate(String schemaFile, String documentFile) throws Exception {
+
+  @SneakyThrows
+  protected List<ValidationMessage> validate(String schemaFile, String documentFile)  {
     JsonSchema schema = getJsonSchemaFromClasspath(schemaFile);
     JsonNode node = getJsonNodeFromClasspath(documentFile);
     val errors = schema.validate(node);
     if (errors.size() > 0) {
-      for (val msg : errors) {
-        log.error(String.format("Error code %s: %s ", msg.getCode(), msg.getMessage()));
-      }
+      log.debug(errors.toString());
     }
-    return errors;
+
+    return Arrays.asList(errors.toArray(new ValidationMessage[0]));
   }
 
-  protected JsonSchema getJsonSchemaFromClasspath(String name) throws Exception {
+  protected JsonSchema getJsonSchemaFromClasspath(String name)  {
     JsonSchemaFactory factory = new JsonSchemaFactory();
     InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(name);
     JsonSchema schema = factory.getSchema(is);
     return schema;
   }
 
-  protected JsonNode getJsonNodeFromClasspath(String name) throws Exception {
+  @SneakyThrows
+  protected JsonNode getJsonNodeFromClasspath(String name)  {
     InputStream is1 = Thread.currentThread().getContextClassLoader().getResourceAsStream(name);
     ObjectMapper mapper = new ObjectMapper();
     JsonNode node = mapper.readTree(is1);
