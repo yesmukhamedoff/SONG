@@ -53,9 +53,8 @@ public class schemaValidationTests {
   @Test
   public void validate_submit_variant_call_invalid_enum() {
     val errors = validate("json-schemas/analysis.json", "documents/variantcall-invalid-enum.json");
-    val paths = getPaths(errors);
 
-    assertThat(paths).isEqualTo(list(
+    assertThat(getPaths(errors)).isEqualTo(list(
         "$.sample[0].donor.donorGender",
         "$.sample[0].sampleType",
         "$.sample[0].specimen.specimenType",
@@ -63,26 +62,22 @@ public class schemaValidationTests {
     );
   }
 
-  private List<String> getPaths(List<ValidationMessage> errors) {
-    return errors.stream().map(ValidationMessage::getPath).collect(Collectors.toList());
-  }
+
 
 
   @Test
   public void validate_submit_sequencing_read_missing_required()  {
     val errors = validate("json-schemas/analysis.json",
             "documents/sequencingread-missing-required.json");
-    val paths = errors.stream().map(ValidationMessage::getPath).collect(Collectors.toList());
-    assertThat(paths).isEqualTo(list( "$.file[0]", "$", "$.sample[0]"));
+    assertThat(getPaths(errors)).isEqualTo(list( "$.file[0]", "$", "$.sample[0]"));
   }
 
   @Test
   public void validate_submit_sequencing_read_invalid_enum()  {
     val errors =
         validate("json-schemas/analysis.json", "documents/sequencingread-invalid-enum.json");
-    val paths = errors.stream().map(f->{return f.getPath();}).collect(Collectors.toList());
 
-    assertThat(paths).isEqualTo(list(
+    assertThat(getPaths(errors)).isEqualTo(list(
         "$.sample[0].donor.donorGender",
         "$.sample[0].sampleType",
         "$.sample[0].specimen.specimenType",
@@ -99,15 +94,18 @@ public class schemaValidationTests {
   public void validate_submit_variant_call_missing_required()  {
     val errors =
         validate("json-schemas/analysis.json", "documents/variantcall-missing-required.json");
-    val paths = errors.stream().map(f->{return f.getPath();}).collect(Collectors.toList());
-    assertThat(paths).isEqualTo(list( "$", "$", "$.sample[0]"));
 
+    assertThat(getPaths(errors)).isEqualTo(list( "$", "$", "$.sample[0]"));
+
+  }
+
+  private List<String> getPaths(List<ValidationMessage> errors) {
+    return errors.stream().map(ValidationMessage::getPath).collect(Collectors.toList());
   }
 
   private <T> List<T> list(T... values) {
     return Arrays.asList(values);
   }
-
 
   @SneakyThrows
   protected List<ValidationMessage> validate(String schemaFile, String documentFile)  {
