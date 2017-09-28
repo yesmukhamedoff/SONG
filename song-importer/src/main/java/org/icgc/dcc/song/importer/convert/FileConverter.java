@@ -16,8 +16,11 @@ import java.util.Set;
 
 import static java.lang.String.format;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
+import static org.icgc.dcc.song.core.utils.JsonUtils.toJson;
 import static org.icgc.dcc.song.importer.convert.AnalysisConverter.getAnalysisId;
 import static org.icgc.dcc.song.importer.convert.Converters.NA;
+import static org.icgc.dcc.song.importer.convert.InfoConverter.buildFileInfo;
+import static org.icgc.dcc.song.importer.convert.InfoConverter.buildIndexFileInfo;
 import static org.icgc.dcc.song.importer.convert.StudyConverter.getStudyId;
 import static org.icgc.dcc.song.importer.parser.FieldNames.INDEX_FILE_ID;
 import static org.icgc.dcc.song.importer.parser.FieldNames.INDEX_FILE_MD5SUM;
@@ -62,8 +65,6 @@ public class FileConverter {
         getFileType(portalFileMetadata),
         getFileMd5sum(portalFileMetadata)
     );
-    files.add(mainFile);
-
     if (portalFileMetadata.isIndexFileComplete()){
       val indexFile = File.create(
           getIndexFileObjectId(portalFileMetadata),
@@ -74,8 +75,15 @@ public class FileConverter {
           getIndexFileType(portalFileMetadata),
           getIndexFileMd5sum(portalFileMetadata)
       );
+      val indexFileInfoJson = toJson(buildIndexFileInfo(portalFileMetadata) );
+      indexFile.setInfo(indexFileInfoJson);
+
+      val mainFileInfoJson = toJson(buildFileInfo(portalFileMetadata) );
+      mainFile.setInfo(mainFileInfoJson);
+
       files.add(indexFile);
     }
+    files.add(mainFile);
     return files.build();
   }
 
