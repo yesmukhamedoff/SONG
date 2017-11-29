@@ -9,9 +9,11 @@ import org.icgc.dcc.song.server.model.experiment.SequencingRead;
 
 @EqualsAndHashCode(callSuper=false)
 @Data
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.ALWAYS)
 public class SequencingReadAnalysis extends Analysis {
+
     SequencingRead experiment;
+
     @JsonGetter
     public String getAnalysisType() {
         return "sequencingRead";

@@ -17,7 +17,7 @@
       "type": "object",
       "properties": {
         "aligned": {
-          "type": "boolean"
+          "type": ["boolean", "null"]
         },
         "alignmentTool": {
           "type": "string"
@@ -50,12 +50,7 @@
         }
       },
       "required": [
-        "aligned",
-        "alignmentTool",
-        "insertSize",
-        "libraryStrategy",
-        "pairedEnd",
-        "referenceGenome"
+        "libraryStrategy"
       ]
     },
     "sample": {
