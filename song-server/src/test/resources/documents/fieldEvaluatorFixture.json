@@ -1,0 +1,13 @@
+{
+
+  "normalStringField" : "somethingNormal",
+  "nullStringField" : null,
+  "emptyStringField" : "",
+  "trueBooleanField" : true,
+  "falseBooleanField" : false,
+  "nullBooleanField" : null,
+  "normalIntegerField" : 5678,
+  "nullIntegerField" : null,
+  "normalLongField" : 1234,
+  "nullLongField" : null
+}

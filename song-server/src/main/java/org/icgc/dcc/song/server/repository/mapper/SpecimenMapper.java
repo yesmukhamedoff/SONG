@@ -22,11 +22,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.icgc.dcc.song.server.model.entity.Specimen;
-import static org.icgc.dcc.song.server.repository.AttributeNames.*;
+import static org.icgc.dcc.song.server.repository.TableAttributeNames.*;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
-
-import lombok.val;
 
 public class SpecimenMapper implements ResultSetMapper<Specimen> {
 

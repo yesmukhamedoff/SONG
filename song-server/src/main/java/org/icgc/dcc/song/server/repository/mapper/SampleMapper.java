@@ -22,7 +22,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.icgc.dcc.song.server.model.entity.Sample;
-import static org.icgc.dcc.song.server.repository.AttributeNames.*;
+import static org.icgc.dcc.song.server.repository.TableAttributeNames.*;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 

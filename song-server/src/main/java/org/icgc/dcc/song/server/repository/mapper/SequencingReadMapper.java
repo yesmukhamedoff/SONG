@@ -19,12 +19,8 @@
 package org.icgc.dcc.song.server.repository.mapper;
 
 import lombok.SneakyThrows;
-import lombok.val;
-import org.icgc.dcc.song.server.model.analysis.Analysis;
-import org.icgc.dcc.song.server.model.analysis.SequencingReadAnalysis;
-import org.icgc.dcc.song.server.model.analysis.VariantCallAnalysis;
 import org.icgc.dcc.song.server.model.experiment.SequencingRead;
-import static org.icgc.dcc.song.server.repository.AttributeNames.*;
+import static org.icgc.dcc.song.server.repository.TableAttributeNames.*;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 

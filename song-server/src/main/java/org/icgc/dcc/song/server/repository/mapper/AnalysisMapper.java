@@ -29,10 +29,10 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import static org.icgc.dcc.song.server.repository.AttributeNames.ID;
-import static org.icgc.dcc.song.server.repository.AttributeNames.STATE;
-import static org.icgc.dcc.song.server.repository.AttributeNames.STUDY_ID;
-import static org.icgc.dcc.song.server.repository.AttributeNames.TYPE;
+import static org.icgc.dcc.song.server.repository.TableAttributeNames.ID;
+import static org.icgc.dcc.song.server.repository.TableAttributeNames.STATE;
+import static org.icgc.dcc.song.server.repository.TableAttributeNames.STUDY_ID;
+import static org.icgc.dcc.song.server.repository.TableAttributeNames.TYPE;
 
 public class AnalysisMapper implements ResultSetMapper<Analysis> {
 

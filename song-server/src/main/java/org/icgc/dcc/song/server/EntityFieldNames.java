@@ -10,5 +10,7 @@ public class EntityFieldNames {
   public static final String PAIRED_END = "pairedEnd";
   public static final String REFERENCE_GENOME = "referenceGenome";
   public static final String INFO = "info";
+  public static final String VARIANT_CALLING_TOOL = "variantCallingTool";
+  public static final String MATCHED_NORMAL_SAMPLE_SUBMITTER_ID = "matchedNormalSampleSubmitterId";
 
 }

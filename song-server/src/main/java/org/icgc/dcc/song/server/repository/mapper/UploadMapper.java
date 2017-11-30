@@ -27,14 +27,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import static org.icgc.dcc.song.server.model.enums.UploadStates.resolveState;
-import static org.icgc.dcc.song.server.repository.AttributeNames.ANALYSIS_ID;
-import static org.icgc.dcc.song.server.repository.AttributeNames.CREATED_AT;
-import static org.icgc.dcc.song.server.repository.AttributeNames.ERRORS;
-import static org.icgc.dcc.song.server.repository.AttributeNames.ID;
-import static org.icgc.dcc.song.server.repository.AttributeNames.PAYLOAD;
-import static org.icgc.dcc.song.server.repository.AttributeNames.STATE;
-import static org.icgc.dcc.song.server.repository.AttributeNames.STUDY_ID;
-import static org.icgc.dcc.song.server.repository.AttributeNames.UPDATED_AT;
+import static org.icgc.dcc.song.server.repository.TableAttributeNames.ANALYSIS_ID;
+import static org.icgc.dcc.song.server.repository.TableAttributeNames.CREATED_AT;
+import static org.icgc.dcc.song.server.repository.TableAttributeNames.ERRORS;
+import static org.icgc.dcc.song.server.repository.TableAttributeNames.ID;
+import static org.icgc.dcc.song.server.repository.TableAttributeNames.PAYLOAD;
+import static org.icgc.dcc.song.server.repository.TableAttributeNames.STATE;
+import static org.icgc.dcc.song.server.repository.TableAttributeNames.STUDY_ID;
+import static org.icgc.dcc.song.server.repository.TableAttributeNames.UPDATED_AT;
 
 public class UploadMapper implements ResultSetMapper<Upload> {
 

@@ -27,14 +27,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import static org.icgc.dcc.song.server.model.enums.AccessTypes.resolveAccessType;
-import static org.icgc.dcc.song.server.repository.AttributeNames.ACCESS;
-import static org.icgc.dcc.song.server.repository.AttributeNames.ANALYSIS_ID;
-import static org.icgc.dcc.song.server.repository.AttributeNames.ID;
-import static org.icgc.dcc.song.server.repository.AttributeNames.MD5;
-import static org.icgc.dcc.song.server.repository.AttributeNames.NAME;
-import static org.icgc.dcc.song.server.repository.AttributeNames.SIZE;
-import static org.icgc.dcc.song.server.repository.AttributeNames.STUDY_ID;
-import static org.icgc.dcc.song.server.repository.AttributeNames.TYPE;
+import static org.icgc.dcc.song.server.repository.TableAttributeNames.ACCESS;
+import static org.icgc.dcc.song.server.repository.TableAttributeNames.ANALYSIS_ID;
+import static org.icgc.dcc.song.server.repository.TableAttributeNames.ID;
+import static org.icgc.dcc.song.server.repository.TableAttributeNames.MD5;
+import static org.icgc.dcc.song.server.repository.TableAttributeNames.NAME;
+import static org.icgc.dcc.song.server.repository.TableAttributeNames.SIZE;
+import static org.icgc.dcc.song.server.repository.TableAttributeNames.STUDY_ID;
+import static org.icgc.dcc.song.server.repository.TableAttributeNames.TYPE;
 
 
 public class FileMapper implements ResultSetMapper<File> {

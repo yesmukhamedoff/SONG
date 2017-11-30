@@ -19,14 +19,16 @@
 package org.icgc.dcc.song.server.model.experiment;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.val;
+import org.icgc.dcc.song.server.deserializers.VariantCallJsonDeserializer;
 
 @EqualsAndHashCode(callSuper=false)
 @Data
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonDeserialize(using = VariantCallJsonDeserializer.class)
+@JsonInclude(JsonInclude.Include.ALWAYS)
 public class VariantCall extends Experiment {
 
   private String analysisId;
