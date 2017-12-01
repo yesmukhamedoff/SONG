@@ -18,18 +18,33 @@
  */
 package org.icgc.dcc.song.server.service;
 
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.icgc.dcc.id.client.core.IdClient;
 import org.icgc.dcc.id.client.util.HashIdClient;
 import org.icgc.dcc.song.core.exceptions.ServerException;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestExecutionListeners;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
 
 import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
 @Slf4j
+@SpringBootTest
+@RunWith(SpringRunner.class)
+@TestExecutionListeners({ DependencyInjectionTestExecutionListener.class })
+@ActiveProfiles("dev")
 public class IdServiceTest {
+  @Autowired
+  private IdClient idClient;
 
   private static final String SUBMITTER_ID_1 = "AN8899";
   private static final String SUBMITTER_ID_2 = "AN112233";
@@ -92,6 +107,40 @@ public class IdServiceTest {
     }
     fail("No exception was thrown, but should have been thrown since ignoreAnalysisIdCollisions=false and"
         + " the same id was attempted to be created");
+  }
+
+
+  @Test
+  public void testGenerateDonorId() {
+    val submittedDonorId="CGP_donor_1337237";
+    val study="BRCA-EU";
+    val id= idClient.createDonorId(submittedDonorId, study);
+    assertThat(id).isEqualTo("DO217962");
+  }
+
+  @Test
+  public void testGenerateSpecimenId() {
+    val submittedSpecimenId="CGP_specimen_1387555";
+    val study="BRCA-EU";
+    val id= idClient.createSpecimenId(submittedSpecimenId, study);
+    assertThat(id).isEqualTo("SP117136");
+  }
+
+  @Test
+  public void testGenerateSampleId() {
+    val submittedSampleId="PD4982a";
+    val study="BRCA-EU";
+    val id = idClient.createSampleId(submittedSampleId, study);
+    assertThat(id).isEqualTo("SA542735");
+  }
+
+  @Test
+  public void testGenerateFileId() {
+    val analysisId="efcf90ee-53ae-4f9f-b29a-e0a83ca70272";
+    val fileName="f5c9381090a53c54358feb2ba5b7a3d7.bam";
+
+    val id  = idClient.getObjectId(analysisId, fileName);
+
   }
 
   private static final IdService createHashIdService(){
