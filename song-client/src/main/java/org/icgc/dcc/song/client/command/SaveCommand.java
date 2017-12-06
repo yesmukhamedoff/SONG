@@ -20,12 +20,25 @@ package org.icgc.dcc.song.client.command;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.base.Charsets;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.val;
+import org.icgc.dcc.common.core.json.JsonNodeBuilders;
 import org.icgc.dcc.song.client.config.Config;
 import org.icgc.dcc.song.client.register.Registry;
+import org.icgc.dcc.song.core.utils.JsonUtils;
+
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.io.Files.write;
+import static java.util.Objects.isNull;
 
 @RequiredArgsConstructor
 @Parameters(separators = "=", commandDescription = "Save an uploaded analysis by it's upload id, and get the permanent analysis id")
@@ -38,6 +51,13 @@ public class SaveCommand extends Command {
       description = "Ignores analysisId collisions with ids from the IdService")
   boolean ignoreAnalysisIdCollisions = false;
 
+
+  @Parameter(names = { "-f", "--input-file" }, description = "Input file containing a list of uploadIds to save. If one of the uploadIds is not VALIDATED, non will be saved")
+  private String inputFilename;
+
+  @Parameter(names = { "-o", "--output-file" }, description = "Output file containing a list of saved analysisIds")
+  private String outputFilename;
+
   @NonNull
   private Registry registry;
 
@@ -46,11 +66,34 @@ public class SaveCommand extends Command {
 
   @Override
   public void run() throws IOException{
-    if (uploadId == null) {
+    if (isNull(uploadId) && isNull(inputFilename) ) {
       uploadId = getJson().at("/uploadId").asText("");
+    } else if (!isNull(uploadId) && !isNull(inputFilename)){
+      throw new IllegalStateException("the -u and -f switches are mutually exclusive");
+    } else if (!isNull(uploadId)){
+      val status = registry.save(config.getStudyId(), uploadId, ignoreAnalysisIdCollisions);
+      save(status);
+    } else {
+      val path = Paths.get(inputFilename);
+      checkArgument(Files.exists(path), "The path '%s' does not exist", inputFilename);
+      checkArgument(Files.isRegularFile(path), "The path '%s' is not a file", inputFilename);
+      checkArgument(Files.isReadable(path), "The file '%s' is not readable", inputFilename);
+      checkArgument(!isNull(outputFilename), "The outputFile is not defined");
+      val parentOutPath = Paths.get(outputFilename).toAbsolutePath().getParent();
+      checkArgument(parentOutPath.toFile().exists(), "The parent directory '%s' does not exist", parentOutPath.toAbsolutePath().toString());
+      val arrayBuilder = JsonNodeBuilders.array();
+      Files.readAllLines(path, Charsets.UTF_8).stream()
+          .map(this::getSaveState)
+          .forEach(arrayBuilder::with);
+      val summary = arrayBuilder.end();
+      write(JsonUtils.toPrettyJson(summary).getBytes(), new File(this.outputFilename));
     }
+  }
+
+  @SneakyThrows
+  private JsonNode getSaveState(String uploadId){
     val status = registry.save(config.getStudyId(), uploadId, ignoreAnalysisIdCollisions);
-    save(status);
+    return JsonUtils.readTree(status.getOutputs());
   }
 
 }
