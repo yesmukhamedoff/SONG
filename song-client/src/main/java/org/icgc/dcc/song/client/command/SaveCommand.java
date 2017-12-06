@@ -22,6 +22,7 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Charsets;
+import com.google.common.collect.Lists;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -35,6 +36,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.io.Files.write;
@@ -92,8 +94,23 @@ public class SaveCommand extends Command {
 
   @SneakyThrows
   private JsonNode getSaveState(String uploadId){
-    val status = registry.save(config.getStudyId(), uploadId, ignoreAnalysisIdCollisions);
-    return JsonUtils.readTree(status.getOutputs());
+    val out = JsonNodeBuilders.object();
+    try{
+      val status = registry.save(config.getStudyId(), uploadId, ignoreAnalysisIdCollisions);
+      val jsonStatus = JsonUtils.readTree(status.getOutputs());
+      out.with("error", "").with("response", jsonStatus);
+    } catch(org.icgc.dcc.song.core.exceptions.ServerException se){
+      val songError = se.getSongError();
+      val errorId = songError.getErrorId();
+      out.with("error", errorId);
+      out.with("response", "");
+    } catch(Throwable e){
+      out.with("error", String.format("[%s]: %s", e.getClass().getSimpleName(), e.getMessage()));
+      out.with("response", "");
+    }
+    return out.end();
   }
+
+  private List<String> erroredUploadIds = Lists.newArrayList();
 
 }
