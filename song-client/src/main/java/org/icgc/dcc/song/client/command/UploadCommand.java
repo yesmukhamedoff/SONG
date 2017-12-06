@@ -22,13 +22,17 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.icgc.dcc.common.core.json.JsonNodeBuilders;
+import org.icgc.dcc.song.client.cli.Status;
 import org.icgc.dcc.song.client.register.Registry;
 import org.icgc.dcc.song.core.utils.JsonUtils;
 
@@ -37,6 +41,7 @@ import java.io.IOException;
 import java.nio.file.FileVisitOption;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -67,47 +72,89 @@ public class UploadCommand extends Command {
 
   @Override
   public void run() throws IOException {
-    streamUploadContent()
-        .map(x -> registry.upload(x, isAsyncValidation))
-        .map(x -> x.getOutputs())
-        .map(x -> JsonUtils.readTree())
-        .forEach(this::save);
+    val opt = streamUploadContent();
+    val arrayBuilder = JsonNodeBuilders.array();
+    if (opt.isPresent()){
+      val stream = opt.get();
+      stream.map(x -> registry.upload(x, isAsyncValidation))
+          .map(Status::getOutputs)
+          .map(UploadCommand::convertToJsonNode)
+          .forEach(arrayBuilder::with);
+      val array = arrayBuilder.end();
+      this.output(JsonUtils.toPrettyJson(array));
+    }
   }
 
-  private JsonNode  upload(String payload){
-    
-    val status = registry.upload(payload, isAsyncValidation);
-
-
-
+  @SneakyThrows
+  private static JsonNode convertToJsonNode(String jsonString){
+    return JsonUtils.readTree(jsonString);
   }
 
-  private Stream<String> streamUploadContent() throws IOException {
+  private Optional<Stream<String>> streamUploadContent() throws IOException {
     if (fileNames.size() == 0 && dirNames.size() == 0 ) {
       val json=getJson();
-      return stream(json.toString());
+      return Optional.of(stream(json.toString()));
     }
 
-    return resolveFiles().stream()
-        .map(this::convertToString);
+    val files = resolveFiles();
+    val filesStatus = checkFiles(files);
+    if (filesStatus.hasErrors()){
+      return Optional.empty();
+    }
+    return Optional.of(files.stream()
+        .map(this::convertToString));
+  }
+
+  @Value
+  public static class FileError{
+    @NonNull private final String filename;
+    @NonNull private final String exceptionType;
+    @NonNull private final String exceptionMessage;
+
+    public static FileError createFileError(String filename, String exceptionType,
+        String exceptionMessage) {
+      return new FileError(filename, exceptionType, exceptionMessage);
+    }
   }
 
   private Set<File> resolveFiles(){
     val out = ImmutableSet.<File>builder();
+    val filesWithIssues = ImmutableList.<File>builder();
     fileNames.stream()
         .map(File::new)
-        .map(this::verifyIsFile)
+        .map(UploadCommand::verifyIsFile)
         .forEach(out::add);
 
     dirNames.stream()
         .map(File::new)
         .flatMap(UploadCommand::streamFilesFromDir)
         .forEach(out::add);
-
     return out.build();
   }
 
-  private File verifyIsFile(File f){
+  private Status checkFiles(Iterable<File> files) {
+    val jsonErrorArray = JsonNodeBuilders.array();
+    boolean hasErrors = false;
+    for (val file : files) {
+      try {
+        JsonUtils.readTree(convertToString(file));
+      } catch (IOException e) {
+        val fileError =
+            FileError.createFileError(file.getAbsolutePath(), e.getClass().getCanonicalName(), e.getMessage());
+        val node = JsonUtils.mapper().valueToTree(fileError);
+        jsonErrorArray.with(node);
+        hasErrors = true;
+      }
+    }
+    val array = jsonErrorArray.end();
+    val status = new Status();
+    if (hasErrors){
+      status.setErrors(array.textValue());
+    }
+    return status;
+  }
+
+  private static File verifyIsFile(File f){
     checkArgument(f.exists(), "The input file '%s' does not exist", f.getName());
     checkArgument(f.isFile(), "The input path '%s' is not a file", f.getName());
     return f;
@@ -115,7 +162,7 @@ public class UploadCommand extends Command {
 
   @SneakyThrows
   private String convertToString(File file){
-    log.info("Converting file '{}", file.getAbsolutePath().toString());
+    log.info("Converting file '{}", file.getAbsolutePath());
     return Files.toString(file, Charsets.UTF_8);
   }
 
