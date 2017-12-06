@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -31,14 +32,13 @@ import lombok.SneakyThrows;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.icgc.dcc.common.core.json.JsonNodeBuilders;
+import org.icgc.dcc.common.core.util.Joiners;
 import org.icgc.dcc.song.client.cli.Status;
 import org.icgc.dcc.song.client.register.Registry;
 import org.icgc.dcc.song.core.utils.JsonUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.FileVisitOption;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -48,6 +48,7 @@ import java.util.stream.Stream;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Lists.newArrayList;
 import static java.nio.file.Files.find;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 
 @RequiredArgsConstructor
@@ -55,34 +56,50 @@ import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 @Slf4j
 public class UploadCommand extends Command {
 
-  @Parameter(names = { "-f", "--files" })
+  private static final String UPLOAD_ID = "uploadId";
+
+  @Parameter(names = { "-f", "--files" }, description = "Files to use for upload")
   private List<String> fileNames = newArrayList();
 
-  @Parameter(names = { "-d", "--directories" })
+  @Parameter(names = { "-d", "--directories" }, description = "Directories to search for files to upload. Will not search recursively")
   private List<String> dirNames = newArrayList();
 
   @Parameter(names = { "-a", "--async" },description = "Enables asynchronous validation")
   boolean isAsyncValidation = false;
 
-  @Parameter(names = { "-o", "--output" })
+  @Parameter(names = { "-o", "--output" },required = true, description = "Path to the output file. The output file contains a list of uploadIds for the corresponding input files")
   private String outputFile;
+
+  @Parameter(names = { "-n", "--dry" }, description = "Dry run. Used to check the formatting of the input files")
+  private boolean dry = false;
 
   @NonNull
   private Registry registry;
 
+  @SneakyThrows
   @Override
   public void run() throws IOException {
     val opt = streamUploadContent();
-    val arrayBuilder = JsonNodeBuilders.array();
     if (opt.isPresent()){
       val stream = opt.get();
-      stream.map(x -> registry.upload(x, isAsyncValidation))
+      val writer = Files.newWriter(new File(outputFile),Charsets.UTF_8);
+      val uploadIds = stream.map(x -> registry.upload(x, isAsyncValidation))
           .map(Status::getOutputs)
-          .map(UploadCommand::convertToJsonNode)
-          .forEach(arrayBuilder::with);
-      val array = arrayBuilder.end();
-      this.output(JsonUtils.toPrettyJson(array));
+          .map(UploadCommand::getUploadIdFromStatus)
+          .collect(toImmutableList());
+      for (val uploadId : uploadIds){
+        writer.write(uploadId);
+        writer.write("\n");
+      }
+      writer.close();
     }
+  }
+
+
+  private static String getUploadIdFromStatus(String json){
+    val node = convertToJsonNode(json);
+    checkArgument(node.hasNonNull(UPLOAD_ID), "The field '%s' does not exist", UPLOAD_ID);
+    return node.path(UPLOAD_ID).textValue();
   }
 
   @SneakyThrows
@@ -97,12 +114,14 @@ public class UploadCommand extends Command {
     }
 
     val files = resolveFiles();
-    val filesStatus = checkFiles(files);
-    if (filesStatus.hasErrors()){
+    checkFiles(files);
+    if (dry){
       return Optional.empty();
+    } else {
+      return Optional.of(files.stream()
+          .map(UploadCommand::convertToString));
     }
-    return Optional.of(files.stream()
-        .map(this::convertToString));
+
   }
 
   @Value
@@ -132,26 +151,20 @@ public class UploadCommand extends Command {
     return out.build();
   }
 
-  private Status checkFiles(Iterable<File> files) {
-    val jsonErrorArray = JsonNodeBuilders.array();
-    boolean hasErrors = false;
+  private static void checkFiles(Iterable<File> files) {
+    val errors = Lists.newArrayList();
     for (val file : files) {
       try {
         JsonUtils.readTree(convertToString(file));
-      } catch (IOException e) {
+      } catch (Exception e) {
         val fileError =
             FileError.createFileError(file.getAbsolutePath(), e.getClass().getCanonicalName(), e.getMessage());
-        val node = JsonUtils.mapper().valueToTree(fileError);
-        jsonErrorArray.with(node);
-        hasErrors = true;
+        errors.add(fileError);
       }
     }
-    val array = jsonErrorArray.end();
-    val status = new Status();
-    if (hasErrors){
-      status.setErrors(array.textValue());
+    if (errors.size() > 0){
+      throw new RuntimeException("The following files could not be parsed by the jsonParser:\n"+ Joiners.NEWLINE.join(errors));
     }
-    return status;
   }
 
   private static File verifyIsFile(File f){
@@ -161,8 +174,7 @@ public class UploadCommand extends Command {
   }
 
   @SneakyThrows
-  private String convertToString(File file){
-    log.info("Converting file '{}", file.getAbsolutePath());
+  private static String convertToString(File file){
     return Files.toString(file, Charsets.UTF_8);
   }
 
@@ -170,7 +182,7 @@ public class UploadCommand extends Command {
   private static Stream<File> streamFilesFromDir(File dir){
     checkArgument(dir.exists(), "The input path '%s' does not exist", dir.getName());
     checkArgument(dir.isDirectory(), "The input path '%s' is not a directory", dir.getName());
-    return find(dir.toPath(),1, (p, attr) -> attr.isRegularFile(), FileVisitOption.FOLLOW_LINKS)
+    return find(dir.toPath(),1, (p, attr) -> attr.isRegularFile())
         .map(Path::toFile);
   }
 
