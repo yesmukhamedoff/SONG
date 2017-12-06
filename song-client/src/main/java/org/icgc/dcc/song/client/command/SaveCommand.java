@@ -70,6 +70,8 @@ public class SaveCommand extends Command {
   public void run() throws IOException{
     if (isNull(uploadId) && isNull(inputFilename) ) {
       uploadId = getJson().at("/uploadId").asText("");
+      val status = registry.save(config.getStudyId(), uploadId, ignoreAnalysisIdCollisions);
+      save(status);
     } else if (!isNull(uploadId) && !isNull(inputFilename)){
       throw new IllegalStateException("the -u and -f switches are mutually exclusive");
     } else if (!isNull(uploadId)){
