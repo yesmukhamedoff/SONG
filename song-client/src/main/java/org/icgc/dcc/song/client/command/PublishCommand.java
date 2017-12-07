@@ -62,9 +62,6 @@ public class PublishCommand extends Command {
 
   @Override
   public void run() throws IOException {
-    if (analysisId == null) {
-      analysisId = getJson().at("/analysisId").asText("");
-    }
     if (isNull(analysisId) && isNull(analysisIdFile)) {
       val analysisId = getJson().at("/analysisId").asText("");
       val status = registry.publish(config.getStudyId(), analysisId);
