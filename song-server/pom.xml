@@ -281,9 +281,9 @@
                         <configuration>
                             <inputSpec>${swagger-config-file}</inputSpec>
                             <language>python</language>
-                            <modelPackage>overture_song2.model</modelPackage>
-                            <apiPackage>overture_song2.api</apiPackage>
-                            <invokerPackage>overture_song2.invoker</invokerPackage>
+                            <modelPackage>model</modelPackage>
+                            <apiPackage>api</apiPackage>
+                            <invokerPackage>invoker</invokerPackage>
                             <configOptions>
                                 <sourceFolder>src</sourceFolder>
                             </configOptions>
