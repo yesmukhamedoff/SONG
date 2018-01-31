@@ -200,10 +200,126 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>com.github.kongchen</groupId>
+                <artifactId>swagger-maven-plugin</artifactId>
+                <version>${swagger-maven-plugin-version}</version>
+                <configuration>
+                    <skipSwaggerGeneration>false</skipSwaggerGeneration>
+                    <apiSources>
+                        <apiSource>
+                            <springmvc>true</springmvc>
+                            <locations><location>org.icgc.dcc.song.server.controller</location></locations>
+                            <schemes>
+                                <scheme>https</scheme>
+                            </schemes>
+                            <host>song.cancercollaboratory.org</host>
+                            <basePath>/</basePath>
+                            <info>
+                                <title>Song API Reference</title>
+                                <version>${project.version}</version>
+                                <description>
+                                    Song API reference for developers. SONG is an open source system for validating and tracking metadata about raw data submissions, assigning identifiers to entities of interest, and managing the state of the raw data with regards to publication and access
+                                </description>
+                                <termsOfService>
+                                    http://www.github.com/kongchen/swagger-maven-plugin
+                                </termsOfService>
+                                <contact>
+                                    <email>dcc-support@oicr.on.ca</email>
+                                    <name>dcc-support</name>
+                                    <url>https://www.overture.bio/song</url>
+                                </contact>
+                                <license>
+                                    <url>https://github.com/overture-stack/SONG/blob/develop/LICENSE</url>
+                                    <name>GNU Affero General Public License</name>
+                                </license>
+                            </info>
+                            <outputFormats>${swagger-config-file-format}</outputFormats>
+                            <swaggerDirectory>${swagger-generated-path}</swaggerDirectory>
+                            <attachSwaggerArtifact>true</attachSwaggerArtifact>
+                        </apiSource>
+                    </apiSources>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>io.swagger</groupId>
+                <artifactId>swagger-codegen-maven-plugin</artifactId>
+                <version>${swagger-codegen.version}</version>
+                <executions>
+                    <execution>
+                        <id>generate-swagger-javaclient</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <inputSpec>${swagger-config-file}</inputSpec>
+                            <language>java</language>
+                            <modelPackage>${project.groupId}.${project.artifactId}.client.model</modelPackage>
+                            <apiPackage>${project.groupId}.${project.artifactId}.client.api</apiPackage>
+                            <invokerPackage>${project.groupId}.${project.artifactId}.client.invoker</invokerPackage>
+                            <configOptions>
+                                <sourceFolder>src/main/java</sourceFolder>
+                            </configOptions>
+                            <output>${generated-sources-path}/java-client</output>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>generate-swagger-pythonclient</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <inputSpec>${swagger-config-file}</inputSpec>
+                            <language>python</language>
+                            <modelPackage>overture_song2.model</modelPackage>
+                            <apiPackage>overture_song2.api</apiPackage>
+                            <invokerPackage>overture_song2.invoker</invokerPackage>
+                            <configOptions>
+                                <sourceFolder>src</sourceFolder>
+                            </configOptions>
+                            <output>${generated-sources-path}/python-client</output>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>generate-swagger-goclient</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <inputSpec>${swagger-config-file}</inputSpec>
+                            <language>go</language>
+                            <modelPackage>overture_song2.model</modelPackage>
+                            <apiPackage>overture_song2.api</apiPackage>
+                            <invokerPackage>overture_song2.invoker</invokerPackage>
+                            <configOptions>
+                                <sourceFolder>src</sourceFolder>
+                            </configOptions>
+                            <output>${generated-sources-path}/go-client</output>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
     <properties>
+        <generated-sources-path>${project.build.directory}/generated-sources</generated-sources-path>
+        <swagger-generated-path>${generated-sources-path}/swagger-ui</swagger-generated-path>
+        <swagger-config-file-format>json</swagger-config-file-format>
+        <swagger-config-file>${swagger-generated-path}/swagger.${swagger-config-file-format}</swagger-config-file>
+        <!--<swagger-codegen.version>2.2.3</swagger-codegen.version>-->
+        <swagger-codegen.version>2.3.1</swagger-codegen.version>
         <postgresql.version>9.4.1208-jdbc42-atlassian-hosted</postgresql.version>
         <springfox.version>2.7.0</springfox.version>
 
@@ -212,6 +328,8 @@
 
         <spring-data-commons.version>1.12.11.RELEASE</spring-data-commons.version>
         <dcc-id.version>5.1.4</dcc-id.version>
+        <swagger-maven-plugin-version>3.1.6</swagger-maven-plugin-version>
+        <!--<swagger-maven-plugin-version>3.0.1</swagger-maven-plugin-version>-->
     </properties>
 
 </project>
