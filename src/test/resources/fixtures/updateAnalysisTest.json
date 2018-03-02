@@ -11,15 +11,15 @@
   },
   "sample": [
     {
-      "sampleSubmitterId": "internal_sample_98024759826836",
+      "sampleSubmitterId": "internal_sample_98024759826836_10",
       "sampleType": "Total RNA",
       "specimen": {
-        "specimenSubmitterId": "internal_specimen_9b73gk8s02dk",
+        "specimenSubmitterId": "internal_specimen_9b73gk8s02dk_10",
         "specimenClass": "Normal",
         "specimenType": "Normal - solid tissue"
       },
       "donor": {
-        "donorSubmitterId": "internal_donor_123456789-00",
+        "donorSubmitterId": "internal_donor_123456789-00_10",
         "donorGender": "female"
       }
     }
