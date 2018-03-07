@@ -24,14 +24,14 @@ import com.google.common.collect.Maps;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.assertj.core.api.Assertions;
 import org.icgc.dcc.song.core.utils.JsonUtils;
+import org.icgc.dcc.song.core.utils.RandomGenerator;
 import org.icgc.dcc.song.server.model.Metadata;
 import org.icgc.dcc.song.server.model.analysis.Analysis;
 import org.icgc.dcc.song.server.model.analysis.SequencingReadAnalysis;
 import org.icgc.dcc.song.server.model.analysis.VariantCallAnalysis;
 import org.icgc.dcc.song.server.model.entity.File;
-import org.icgc.dcc.song.core.utils.RandomGenerator;
+import org.icgc.dcc.song.server.model.entity.Study;
 import org.icgc.dcc.song.server.utils.TestFiles;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -50,28 +50,35 @@ import java.util.ArrayList;
 import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.ANALYSIS_ID_NOT_FOUND;
+import static org.icgc.dcc.song.core.exceptions.ServerErrors.DUPLICATE_ANALYSIS_ATTEMPT;
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.STUDY_ID_DOES_NOT_EXIST;
 import static org.icgc.dcc.song.core.testing.SongErrorAssertions.assertSongError;
 import static org.icgc.dcc.song.core.utils.JsonUtils.fromJson;
 import static org.icgc.dcc.song.core.utils.JsonUtils.toJson;
-import static org.icgc.dcc.song.server.utils.ErrorTesting.assertSongError;
 import static org.icgc.dcc.song.core.utils.RandomGenerator.createRandomGenerator;
+import static org.icgc.dcc.song.server.repository.search.IdSearchRequest.createIdSearchRequest;
 import static org.icgc.dcc.song.server.utils.TestFiles.getInfoName;
 
 @Slf4j
 @SpringBootTest
 @RunWith(SpringRunner.class)
 @TestExecutionListeners({ DependencyInjectionTestExecutionListener.class})
-@ActiveProfiles("dev")
+@ActiveProfiles({"dev", "test"})
 public class AnalysisServiceTest {
 
   private static final String FILEPATH = "src/test/resources/fixtures/";
   private static final String TEST_FILEPATH = "src/test/resources/documents/";
 
+
   @Autowired
   FileService fileService;
   @Autowired
   AnalysisService service;
+  @Autowired
+  IdService idService;
+  @Autowired
+  private StudyService studyService;
+
 
   private final RandomGenerator randomGenerator = createRandomGenerator(AnalysisServiceTest.class.getSimpleName());
 
@@ -112,11 +119,26 @@ public class AnalysisServiceTest {
   }
 
   @Test
+  public void testIsAnalysisExist(){
+    val study="ABC123";
+    val json = readFile(FILEPATH + "variantCall2.json");
+    val analysis = fromJson(json, Analysis.class);
+    val randomAnalysisId = randomGenerator.generateRandomUUID().toString();
+    analysis.setAnalysisId(randomAnalysisId);
+    assertThat(service.doesAnalysisIdExist(randomAnalysisId)).isFalse();
+    val actualAnalysisId = service.create(study, analysis, false);
+    assertThat(actualAnalysisId).isEqualTo(randomAnalysisId);
+    assertThat(service.doesAnalysisIdExist(randomAnalysisId)).isTrue();
+  }
+
+  @Test
   public void testCreateAndUpdateVariantCall() {
     val study="ABC123";
     val json = readFile(FILEPATH + "variantCall.json");
     val analysis = fromJson(json, Analysis.class);
+    assertThat(service.doesAnalysisIdExist(analysis.getAnalysisId())).isFalse();
     val analysisId=service.create(study, analysis, false);
+    assertThat(service.doesAnalysisIdExist(analysis.getAnalysisId())).isTrue();
 
     val created = service.read(analysisId);
     assertThat(created.getAnalysisId()).isEqualTo(analysisId);
@@ -140,7 +162,6 @@ public class AnalysisServiceTest {
     log.info(format("Created '%s'",toJson(created)));
   }
 
-  @Ignore // When mvn runs this test, we get three files, not two. IntelliJ doesn't.
   @Test
   public void testRead() {
     // test sequencing read
@@ -148,13 +169,17 @@ public class AnalysisServiceTest {
     val analysis1 = service.read(id1);
     assertThat(analysis1.getAnalysisId()).isEqualTo("AN1");
     assertThat(analysis1.getAnalysisType()).isEqualTo("variantCall");
+    assertThat(analysis1.getAnalysisState()).isEqualTo("UNPUBLISHED");
     assertThat(analysis1.getStudy()).isEqualTo("ABC123");
     assertThat(analysis1.getSample().size()).isEqualTo(2);
     assertThat(analysis1.getFile().size()).isEqualTo(2);
     assertThat(analysis1).isInstanceOf(VariantCallAnalysis.class);
+
     val experiment1 = ((VariantCallAnalysis) analysis1).getExperiment();
     assertThat(experiment1).isNotNull();
     assertThat(experiment1.getVariantCallingTool()).isEqualTo("SuperNewVariantCallingTool");
+    assertThat(experiment1.getMatchedNormalSampleSubmitterId()).isEqualTo("myMatchedNormalSampleSubmitterId");
+    assertThat(experiment1.getAnalysisId()).isEqualTo(id1);
 
     assertThat(getInfoName(analysis1)).isEqualTo("analysis1");
     assertThat(getInfoName(experiment1)).isEqualTo("variantCall1");
@@ -163,24 +188,26 @@ public class AnalysisServiceTest {
     val id2="AN2";
     val analysis2 = service.read(id2);
     assertThat(analysis2.getAnalysisId()).isEqualTo("AN2");
-    //assertThat(analysis2.getAnalysisState()).isEqualTo("UNPUBLISHED");
+    assertThat(analysis2.getAnalysisState()).isEqualTo("UNPUBLISHED");
     assertThat(analysis2.getAnalysisType()).isEqualTo("sequencingRead");
     assertThat(analysis2.getFile().size()).isEqualTo(2);
+    assertThat(analysis2.getSample().size()).isEqualTo(1);
     assertThat(analysis2).isInstanceOf(SequencingReadAnalysis.class);
+
     val experiment2 = ((SequencingReadAnalysis) analysis2).getExperiment();
     assertThat(experiment2).isNotNull();
+    assertThat(experiment2.getAligned()).isEqualTo(true);
+    assertThat(experiment2.getAnalysisId()).isEqualTo(id2);
+    assertThat(experiment2.getInsertSize()).isEqualTo(12345);
+    assertThat(experiment2.getLibraryStrategy()).isEqualTo("Other");
+    assertThat(experiment2.getPairedEnd()).isEqualTo(true);
+    assertThat(experiment2.getReferenceGenome()).isEqualTo("hg19");
     assertThat(experiment2.getAlignmentTool()).isEqualTo("BigWrench");
 
     assertThat(getInfoName(analysis2)).isEqualTo("analysis2");
     assertThat(getInfoName(experiment2)).isEqualTo("sequencingRead2");
-
-    //checkRead(id2, fromJson(json2, Analysis.class));
-
-    // test not found
-    val id3="ANDOESNTEXIST";
-    val analysis3 = service.read(id3);
-    assertThat(analysis3).isNull();
   }
+
 
   @Ignore
   @Test
@@ -211,8 +238,6 @@ public class AnalysisServiceTest {
     return mapper.writeValueAsString(node);
   }
 
-  @Ignore // when we run this with IntelliJ, it works. Mvn gets a third file, with a different object id. We don't
-          // know why...
   @Test
   public void testReadFiles() {
     val files = service.readFiles("AN1");
@@ -222,9 +247,17 @@ public class AnalysisServiceTest {
     expectedFiles.add(fileService.read("FI1"));
     expectedFiles.add(fileService.read("FI2"));
 
-    Assertions.assertThat(files).containsAll(expectedFiles);
+    assertThat(files).containsAll(expectedFiles);
     assertThat(expectedFiles).containsAll(files);
   }
+
+  @Test
+  public void testDuplicateAnalysisAttemptError() {
+    val an1 = service.read("AN1");
+    assertSongError(() -> service.create(an1.getStudy(), an1, true),
+        DUPLICATE_ANALYSIS_ATTEMPT);
+  }
+
 
   @Test
   public void testCustomAnalysisId(){
@@ -250,17 +283,41 @@ public class AnalysisServiceTest {
   }
 
   @Test
-  public void testStudyIdDneException(){
+  public void testGetAnalysisEmptyStudy(){
+    val nonExistentStudyId = randomGenerator.generateRandomAsciiString(10);
+    assertThat(studyService.isStudyExist(nonExistentStudyId)).isFalse();
+    studyService.saveStudy(Study.create(nonExistentStudyId,"","",""));
+    assertThat(service.getAnalysis(nonExistentStudyId)).isEmpty();
+  }
+
+  @Test
+  public void testIdSearchEmptyStudy(){
+    val nonExistentStudyId = randomGenerator.generateRandomAsciiString(10);
+    assertThat(studyService.isStudyExist(nonExistentStudyId)).isFalse();
+    studyService.saveStudy(Study.create(nonExistentStudyId,"","",""));
+    val idSearchRequest = createIdSearchRequest(null, null, null, null);
+    assertThat(service.idSearch(nonExistentStudyId, idSearchRequest)).isEmpty();
+  }
+
+  @Test
+  public void testGetAnalysisDNEStudy() {
     val nonExistentStudyId = randomGenerator.generateRandomAsciiString(12);
     assertSongError(() -> service.getAnalysis(nonExistentStudyId), STUDY_ID_DOES_NOT_EXIST);
   }
 
   @Test
+  public void testIdSearchDNEStudy(){
+    val nonExistentStudyId = randomGenerator.generateRandomAsciiString(12);
+    val idSearchRequest = createIdSearchRequest(null, null, null, null);
+    assertSongError(() -> service.idSearch(nonExistentStudyId, idSearchRequest), STUDY_ID_DOES_NOT_EXIST);
+  }
+
+  @Test
   public void testAnalysisIdDneException(){
-    val nonAnalysisId = randomGenerator.generateRandomAsciiString(12);
-    assertSongError(() -> service.read(nonAnalysisId), ANALYSIS_ID_NOT_FOUND);
-    assertSongError(() -> service.readFiles(nonAnalysisId), ANALYSIS_ID_NOT_FOUND);
-    assertSongError(() -> service.readSamples(nonAnalysisId), ANALYSIS_ID_NOT_FOUND);
+    val nonExistentAnalysisId = randomGenerator.generateRandomUUID().toString();
+    assertSongError(() -> service.read(nonExistentAnalysisId), ANALYSIS_ID_NOT_FOUND);
+    assertSongError(() -> service.readFiles(nonExistentAnalysisId), ANALYSIS_ID_NOT_FOUND);
+    assertSongError(() -> service.readSamples(nonExistentAnalysisId), ANALYSIS_ID_NOT_FOUND);
   }
 
 }

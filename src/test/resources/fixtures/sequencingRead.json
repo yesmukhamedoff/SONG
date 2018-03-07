@@ -19,7 +19,7 @@
         "specimenType": "Normal - solid tissue"
       },
       "donor": {
-        "donorSubmitterId": "internal_donor_123456789-00",
+        "donorSubmitterId": "internal_donor_123456789-00_99999",
         "donorGender": "female"
       }
     }

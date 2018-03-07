@@ -2,20 +2,20 @@
   "analysisType": "variantCall",
   "experiment": {
     "variantCallingTool": "silver bullet",
-    "matchedNormalSampleSubmitterId": "sample x24-11a",
+    "matchedNormalSampleSubmitterId": "sample x24-11a_4",
     "notes": "we can put anything we want as extra JSON fields"
   },
   "sample": [
     {
-      "sampleSubmitterId": "internal_sample_98024759826836",
+      "sampleSubmitterId": "internal_sample_98024759826836_4",
       "sampleType": "Total RNA",
       "specimen": {
-        "specimenSubmitterId": "internal_specimen_9b73gk8s02dk",
+        "specimenSubmitterId": "internal_specimen_9b73gk8s02dk_4",
         "specimenClass": "Tumour",
         "specimenType": "Primary tumour - other"
       },
       "donor": {
-        "donorSubmitterId": "internal_donor_123456789-00",
+        "donorSubmitterId": "internal_donor_123456789-00_4",
         "donorGender": "female"
       }
     }
