@@ -32,6 +32,14 @@ management:
 swagger:
   alternateUrl: "/api-docs"
 
+spring:
+  datasource:
+    tomcat:
+      test-on-borrow: true
+      test-on-connect: true
+      validation-query: SELECT 1
+      validation-interval: 1
+
 id:
   idUrl: "http://localhost:9090"
   authToken: "idToken"
