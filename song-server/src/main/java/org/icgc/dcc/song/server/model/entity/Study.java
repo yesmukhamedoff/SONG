@@ -64,7 +64,9 @@ public class Study extends Metadata {
 //  @OneToMany(fetch = FetchType.LAZY, mappedBy = TableNames.FILE)
 //  private List<File> files;
 
-  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  @OneToMany(cascade = CascadeType.ALL,
+      fetch = FetchType.LAZY,
+      mappedBy = ModelAttributeNames.STUDY)
   private List<Donor> donors;
 
   public Study withDonor(@NonNull Donor donor){

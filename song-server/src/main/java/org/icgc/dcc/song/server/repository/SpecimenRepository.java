@@ -17,7 +17,6 @@
 package org.icgc.dcc.song.server.repository;
 
 import lombok.val;
-import org.icgc.dcc.common.core.util.stream.Collectors;
 import org.icgc.dcc.song.server.model.entity.Specimen;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -61,16 +60,11 @@ public interface SpecimenRepository extends JpaRepository<Specimen, String> {
 	}
 
   default List<String> findByParentId( String donor_id){
-    return findAll().stream()
-        .filter(x -> x.getDonorId().equals(donor_id))
-        .map(Specimen::getSpecimenId)
-        .collect(Collectors.toImmutableList());
+    throw new IllegalStateException("not implemented");
 	}
 
   default String findByBusinessKey( String studyId,  String submitterId){
-    return findAll().stream()
-        .filter(x -> x.get)
-
+    throw new IllegalStateException("not implemented");
 	}
 
 }

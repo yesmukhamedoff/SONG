@@ -8,6 +8,8 @@ import lombok.ToString;
 import lombok.val;
 import org.hibernate.annotations.Type;
 import org.icgc.dcc.song.core.utils.JsonUtils;
+import org.icgc.dcc.song.server.model.enums.TableNames;
+import org.icgc.dcc.song.server.repository.TableAttributeNames;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -21,16 +23,16 @@ import static org.icgc.dcc.song.server.repository.CustomJsonType.CUSTOM_JSON_TYP
 @ToString(callSuper = true)
 @Data
 @Entity
-@Table(name = "Info")
+@Table(name = TableNames.INFO)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class Info {
 
   @Id
-  @Column(name = "id", updatable = false, unique = true, nullable = false)
+  @Column(name = TableAttributeNames.ID, updatable = false, unique = true, nullable = false)
   private String id;
 
 
-  @Column(name = "id_type", nullable = false)
+  @Column(name = TableAttributeNames.ID_TYPE, nullable = false)
   private String idType;
 
 //  @Type(type = "com.marvinformatics.hibernate.json.JsonUserType")

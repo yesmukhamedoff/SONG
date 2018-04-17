@@ -22,14 +22,18 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.ToString;
-import lombok.val;
 import org.icgc.dcc.song.server.model.Metadata;
+import org.icgc.dcc.song.server.model.ModelAttributeNames;
 import org.icgc.dcc.song.server.model.enums.TableNames;
 import org.icgc.dcc.song.server.repository.TableAttributeNames;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 import static org.icgc.dcc.song.server.model.enums.Constants.SPECIMEN_CLASS;
@@ -40,38 +44,49 @@ import static org.icgc.dcc.song.server.model.enums.Constants.validate;
 @Entity
 @Table(name = TableNames.SPECIMEN)
 @EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true)
+@ToString(callSuper = true, exclude = { ModelAttributeNames.DONOR })
 @JsonInclude(JsonInclude.Include.NON_ABSENT)
 public class Specimen extends Metadata {
 
   @Id
   @Column(name = TableAttributeNames.ID,
       updatable = false, unique = true, nullable = false)
-  private String specimenId = "";
+  private String specimenId;
 
+  @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+  @JoinColumn(name = TableAttributeNames.DONOR_ID)
+  private Donor donor;
 
-  @Column(name = TableAttributeNames.DONOR_ID)
-  private String donorId="";
+//@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+//  private List<Sample> samples;
 
-  @Column(name = TableAttributeNames.SUBMITTER_ID)
-  private String specimenSubmitterId = "";
+  @Column(name = TableAttributeNames.SUBMITTER_ID, nullable = false)
+  private String specimenSubmitterId;
 
-  @Column(name = TableAttributeNames.CLASS)
-  private String specimenClass = "";
+  @Column(name = TableAttributeNames.CLASS, nullable = false)
+  private String specimenClass;
 
-  @Column(name = TableAttributeNames.TYPE)
-  private String specimenType = "";
+  @Column(name = TableAttributeNames.TYPE, nullable = false)
+  private String specimenType;
 
-  public static Specimen create(String id, @NonNull String submitterId, String donorId, String specimenClass,
-                                String type) {
-    val s = new Specimen();
-    s.setSpecimenId(id);
-    s.setDonorId(donorId);
-    s.setSpecimenSubmitterId(submitterId);
-    s.setSpecimenClass(specimenClass);
-    s.setSpecimenType(type);
+  // RTISMA_HACK need to remove this, now that relationships are properly mapped with JPA
+//  public static Specimen create(String id, @NonNull String submitterId, String donorId, String specimenClass,
+//                                String type) {
+//    val s = new Specimen();
+//    s.setSpecimenId(id);
+//    s.setDonor(Donor.create(donorId, "", "", DONOR_GENDER.stream().findFirst().get())); //RTISMA_HACK  s.setDonorId(donorId);
+//    s.setSpecimenSubmitterId(submitterId);
+//    s.setSpecimenClass(specimenClass);
+//    s.setSpecimenType(type);
+//
+//    return s;
+//  }
 
-    return s;
+  public void setDonor(@NonNull Donor donor){
+    this.donor = donor;
+    if (!donor.getSpecimens().contains(this)){
+      donor.addSpecimen(this);
+    }
   }
 
   public void setSpecimenClass(String specimenClass) {

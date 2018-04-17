@@ -9,6 +9,7 @@ public class ModelAttributeNames {
 
   public static final String DONOR_ID = "donorId";
   public static final String DONORS = "donors";
+  public static final String DONOR = "donor";
   public static final String ANALYSIS_TYPE = "analysisType";
   public static final String DONOR_SUBMITTER_ID = "donorSubmitterId";
   public static final String STUDY_ID = "studyId";

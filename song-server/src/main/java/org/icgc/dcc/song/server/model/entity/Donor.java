@@ -19,6 +19,7 @@ package org.icgc.dcc.song.server.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.google.common.collect.Lists;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
@@ -35,18 +36,12 @@ import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import java.util.List;
 
-import static org.icgc.dcc.song.server.model.ModelAttributeNames.DONOR_ID;
-import static org.icgc.dcc.song.server.model.ModelAttributeNames.DONOR_SUBMITTER_ID;
-import static org.icgc.dcc.song.server.model.ModelAttributeNames.INFO;
-import static org.icgc.dcc.song.server.model.ModelAttributeNames.SPECIMENS;
-import static org.icgc.dcc.song.server.model.ModelAttributeNames.STUDY_ID;
 import static org.icgc.dcc.song.server.model.enums.Constants.DONOR_GENDER;
 import static org.icgc.dcc.song.server.model.enums.Constants.validate;
-import static org.icgc.dcc.song.server.repository.TableAttributeNames.GENDER;
-import static org.icgc.dcc.song.server.repository.TableAttributeNames.ID;
-import static org.icgc.dcc.song.server.repository.TableAttributeNames.SUBMITTER_ID;
 
 @Entity(name = TableNames.DONOR)
 @Table(name = TableNames.DONOR)
@@ -54,17 +49,17 @@ import static org.icgc.dcc.song.server.repository.TableAttributeNames.SUBMITTER_
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true, exclude = {ModelAttributeNames.STUDY})
 @JsonPropertyOrder({
-    DONOR_ID,
-    DONOR_SUBMITTER_ID,
-    STUDY_ID,
+    ModelAttributeNames.DONOR_ID,
+    ModelAttributeNames.DONOR_SUBMITTER_ID,
+    ModelAttributeNames.STUDY_ID,
     ModelAttributeNames.DONOR_GENDER,
-    SPECIMENS,
-    INFO })
+    ModelAttributeNames.SPECIMENS,
+    ModelAttributeNames.INFO })
 @JsonInclude(JsonInclude.Include.ALWAYS)
 public class Donor extends Metadata {
 
   @Id
-  @Column(name = ID, updatable = false, unique = true, nullable = false)
+  @Column(name = TableAttributeNames.ID, updatable = false, unique = true, nullable = false)
   private String donorId;
 
   @ManyToOne(cascade = CascadeType.ALL,
@@ -72,20 +67,28 @@ public class Donor extends Metadata {
   @JoinColumn(name = TableAttributeNames.STUDY_ID)
   private Study study;
 
-  @Column(name = SUBMITTER_ID, nullable = false)
+  @OneToMany(cascade = CascadeType.ALL,
+      fetch = FetchType.LAZY,
+      mappedBy = ModelAttributeNames.DONOR )
+  private List<Specimen> specimens = Lists.newArrayList();
+
+  @Column(name = TableAttributeNames.SUBMITTER_ID, nullable = false)
   private String donorSubmitterId;
 
-  @Column(name = GENDER, nullable = false)
+  @Column(name = TableAttributeNames.GENDER, nullable = false)
   private String donorGender;
-
-  public String getStudyId(){
-    return study.getStudyId();
-  }
 
   public void setStudy(@NonNull Study study){
     this.study = study;
     if (!study.getDonors().contains(this)){
       study.withDonor(this);
+    }
+  }
+
+  public void addSpecimen(@NonNull Specimen specimen){
+    this.specimens.add(specimen);
+    if (specimen.getDonor() != this){
+      specimen.setDonor(this);
     }
   }
 
