@@ -16,49 +16,102 @@
  */
 package org.icgc.dcc.song.server.repository;
 
+import lombok.Getter;
+import lombok.val;
+import org.icgc.dcc.song.server.model.entity.Sample;
+import org.icgc.dcc.song.server.model.entity.Specimen;
+import org.springframework.data.jpa.repository.JpaRepository;
+
 import java.util.List;
 
-import org.icgc.dcc.song.server.model.entity.Sample;
-import org.icgc.dcc.song.server.repository.mapper.SampleMapper;
-import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.BindBean;
-import org.skife.jdbi.v2.sqlobject.SqlQuery;
-import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
+import static org.icgc.dcc.song.server.repository.SampleRepository.SpecimenRequest.createSpecimenRequest;
 
-@RegisterMapper(SampleMapper.class)
-public interface SampleRepository {
+public interface SampleRepository extends JpaRepository<Sample, String> {
 
-  @SqlUpdate("INSERT INTO Sample (id, submitter_id, specimen_id, type) " +
-             "VALUES (:sampleId, :sampleSubmitterId, :specimenId, :sampleType)")
-  int create(@BindBean Sample sample);
+  default int create( Sample sample){
+    save(sample);
+    return 1;
+	}
 
-  @SqlQuery("SELECT id, submitter_id, specimen_id, type FROM Sample WHERE id=:id")
-  Sample read(@Bind("id") String id);
+  default Sample read( String id){
+    return findById(id).orElse(null);
+	}
 
-  @SqlQuery("SELECT id, submitter_id, specimen_id, type FROM Sample WHERE specimen_id=:specimen_id")
-  List<Sample> readByParentId(@Bind("specimen_id") String specimenId);
+  List<Sample> findAllBySpecimen(Specimen specimen);
 
-  @SqlUpdate("UPDATE Sample SET submitter_id=:sampleSubmitterId, type=:sampleType where id=:sampleId")
-  int update(@BindBean Sample sample);
+  class SpecimenRequest extends Specimen{
 
-  @SqlUpdate("UPDATE Sample SET submitter_id=:sampleSubmitterId, type=:sampleType where id=:id")
-  int update(@Bind("id") String id, @BindBean Sample sample);
+    @Getter private String specimenClass;
+    @Getter private String specimenType;
 
-  @SqlUpdate("DELETE from Sample where id=:id")
-  int delete(@Bind("id") String id);
+    @Override public void setSpecimenClass(String specimenClass) {
+      this.specimenClass = specimenClass;
+    }
 
-  @SqlUpdate("DELETE from Sample where specimen_id=:specimenId")
-  String deleteByParentId(String specimenId);
+    @Override public void setSpecimenType(String type) {
+      this.specimenType = type;
+    }
 
-  @SqlQuery("SELECT id from Sample where specimen_id=:specimenId")
-  List<String> findByParentId(@Bind("specimenId") String specimen_id);
+    public static SpecimenRequest createSpecimenRequest(String id, String submitterId, String specimenClass, String specimenType ){
+      val s = new SpecimenRequest();
+      s.setSpecimenId(id);
+      s.setSpecimenSubmitterId(submitterId);
+      s.setSpecimenClass(specimenClass);
+      s.setSpecimenType(specimenType);
+      return s;
+    }
 
-  @SqlQuery("SELECT s.id "
-      + "FROM Sample s, Specimen sp, Donor d "
-      + "WHERE s.submitter_id = :submitterId AND "
-      + "s.specimen_id = sp.id AND "
-      + "sp.donor_id = d.id AND "
-      + "d.study_id = :studyId")
-  String findByBusinessKey(@Bind("studyId") String studyId, @Bind("submitterId") String submitterId);
+  }
+
+  default List<Sample> readByParentId( String specimenId){
+    val req = createSpecimenRequest(specimenId, null, null, null);
+    return findAllBySpecimen(req);
+	}
+
+  default int update( Sample sample){
+    val result = findById(sample.getSampleId());
+    if(result.isPresent()){
+      val readSample = result.get();
+      if (!readSample.equals(sample)){
+        save(sample);
+        return 1;
+      }
+    }
+    return 0;
+	}
+
+  default int update( String id,  Sample sample){
+    return update(sample);
+	}
+
+	int deleteAllBySpecimen(Specimen specimen);
+
+  default int delete( String id){
+    val result = findById(id);
+    if(result.isPresent()){
+      val readSpecimen = result.get();
+      delete(readSpecimen);
+      return 1;
+    }
+    return 0;
+	}
+
+
+
+  default String deleteByParentId(String specimenId){
+    val req = createSpecimenRequest(specimenId, null, null,null);
+    deleteAllBySpecimen(req);
+    return "";
+	}
+
+
+  default List<String> findByParentId( String specimen_id){
+    return readByParentId(specimen_id).stream().map(Sample::getSampleId).collect(toImmutableList());
+	}
+
+  default String findByBusinessKey( String studyId,  String submitterId){
+    throw new IllegalStateException("not implemented");
+	}
+
 }

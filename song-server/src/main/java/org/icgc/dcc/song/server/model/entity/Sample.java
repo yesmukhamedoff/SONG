@@ -20,33 +20,69 @@ package org.icgc.dcc.song.server.model.entity;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NonNull;
 import lombok.ToString;
 import lombok.val;
 import org.icgc.dcc.song.server.model.Metadata;
+import org.icgc.dcc.song.server.model.ModelAttributeNames;
 import org.icgc.dcc.song.server.model.enums.Constants;
+import org.icgc.dcc.song.server.model.enums.TableNames;
+import org.icgc.dcc.song.server.repository.TableAttributeNames;
 
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+
+@Entity
+@Table(name = TableNames.SAMPLE)
 @EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true)
+@ToString(callSuper = true, exclude = { ModelAttributeNames.SPECIMEN })
 @Data
 @JsonInclude(JsonInclude.Include.ALWAYS)
 public class Sample extends Metadata {
 
-  private String sampleId = "";
-  private String specimenId="";
-  private String sampleSubmitterId = "";
-  private String sampleType = "";
+  @Id
+  @Column(name = TableAttributeNames.ID,
+      updatable = false, unique = true, nullable = false)
+  private String sampleId;
 
-  public static Sample create(String id, @NonNull String submitter, String specimenId, String type) {
-    val sample = new Sample();
-    sample.setSampleId(id);
-    sample.setSpecimenId(specimenId);
-    sample.setSampleSubmitterId(submitter);
+  @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+  @JoinColumn(name = TableAttributeNames.SPECIMEN_ID)
+  private Specimen specimen;
 
-    sample.setSampleType(type);
+  @Column(name = TableAttributeNames.SUBMITTER_ID, nullable = false)
+  private String sampleSubmitterId;
 
-    return sample;
+  @Column(name = TableAttributeNames.TYPE, nullable = false)
+  private String sampleType;
+
+  public static Sample createSample(String id, String sampleSubmitterId, String type){
+    val s = new Sample();
+    s.setSampleId(id);
+    s.setSampleSubmitterId(sampleSubmitterId);
+    s.setSampleType(type);
+    return s;
   }
+
+  //RTISMA_HACK remove this create
+//  public static Sample create(String id, @NonNull String submitter, String specimenId, String type) {
+//    val sample = new Sample();
+//    sample.setSampleId(id);
+//
+//    //RTISMA_HACK
+//    sample.setSpecimen(Specimen.create(specimenId,"","",
+//        SPECIMEN_CLASS.stream().findFirst().get(),
+//        SPECIMEN_TYPE.stream().findFirst().get()));
+//    sample.setSampleSubmitterId(submitter);
+//
+//    sample.setSampleType(type);
+//
+//    return sample;
+//  }
 
   public void setSampleType(String type) {
     Constants.validate(Constants.SAMPLE_TYPE, type);

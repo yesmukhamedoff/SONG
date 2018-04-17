@@ -22,6 +22,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.ToString;
+import lombok.val;
 import org.icgc.dcc.song.server.model.Metadata;
 import org.icgc.dcc.song.server.model.ModelAttributeNames;
 import org.icgc.dcc.song.server.model.enums.TableNames;
@@ -34,7 +35,9 @@ import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import java.util.List;
 
 import static org.icgc.dcc.song.server.model.enums.Constants.SPECIMEN_CLASS;
 import static org.icgc.dcc.song.server.model.enums.Constants.SPECIMEN_TYPE;
@@ -57,9 +60,6 @@ public class Specimen extends Metadata {
   @JoinColumn(name = TableAttributeNames.DONOR_ID)
   private Donor donor;
 
-//@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-//  private List<Sample> samples;
-
   @Column(name = TableAttributeNames.SUBMITTER_ID, nullable = false)
   private String specimenSubmitterId;
 
@@ -68,6 +68,20 @@ public class Specimen extends Metadata {
 
   @Column(name = TableAttributeNames.TYPE, nullable = false)
   private String specimenType;
+
+  @OneToMany(cascade = CascadeType.ALL,
+      fetch = FetchType.LAZY,
+      mappedBy = ModelAttributeNames.SPECIMEN)
+  private List<Sample> samples;
+
+  public static Specimen createSpecimen(String id, String submitterId, String specimenClass, String type){
+    val s = new Specimen();
+    s.setSpecimenId(id);
+    s.setSpecimenClass(specimenClass);
+    s.setSpecimenSubmitterId(submitterId);
+    s.setSpecimenType(type);
+    return s;
+  }
 
   // RTISMA_HACK need to remove this, now that relationships are properly mapped with JPA
 //  public static Specimen create(String id, @NonNull String submitterId, String donorId, String specimenClass,

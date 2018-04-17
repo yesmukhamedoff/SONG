@@ -46,7 +46,7 @@ public interface SpecimenRepository extends JpaRepository<Specimen, String> {
 	}
 
   default int update( String id,  Specimen specimen){
-    return update(specimen.getSpecimenId(), specimen);
+    return update(specimen);
 	}
 
   default int delete( String id){
