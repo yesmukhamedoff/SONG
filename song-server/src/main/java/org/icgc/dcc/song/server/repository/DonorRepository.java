@@ -18,6 +18,7 @@ package org.icgc.dcc.song.server.repository;
 
 import lombok.val;
 import org.icgc.dcc.song.server.model.entity.Donor;
+import org.icgc.dcc.song.server.model.entity.Study;
 import org.springframework.data.domain.Example;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -68,6 +69,8 @@ public interface DonorRepository extends JpaRepository<Donor, String> {
     return results.get(0).getDonorId();
   }
 
+  // RTISMA_HACK  shouldnt have this class. This is just a temp fix before removeing the validation stuff out
+  // of Donor entity
   class DonorRequest extends  Donor {
     private String gender;
 
@@ -84,7 +87,7 @@ public interface DonorRepository extends JpaRepository<Donor, String> {
       val d = new DonorRequest();
       d.setDonorGender(gender);
       d.setDonorId(id);
-      d.setStudyId(studyId);
+      d.setStudy(Study.create(studyId, "", "", "")); //RTISMA_HACK
       d.setDonorSubmitterId(submitterId);
       return d;
     }

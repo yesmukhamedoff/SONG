@@ -23,38 +23,72 @@ import lombok.NonNull;
 import lombok.ToString;
 import lombok.val;
 import org.icgc.dcc.song.server.model.Metadata;
+import org.icgc.dcc.song.server.model.ModelAttributeNames;
+import org.icgc.dcc.song.server.model.enums.TableNames;
+import org.icgc.dcc.song.server.repository.TableAttributeNames;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import java.util.List;
 
-import static org.icgc.dcc.song.server.model.enums.TableNames.STUDY;
-import static org.icgc.dcc.song.server.repository.TableAttributeNames.ID;
+import static com.google.common.collect.Lists.newArrayList;
+import static java.util.Objects.isNull;
 
 @EqualsAndHashCode(callSuper=true)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @Data
-@ToString(callSuper = true)
+@ToString(callSuper = true, exclude = { ModelAttributeNames.DONORS})
 @Entity
-@Table(name = STUDY)
+@Table(name = TableNames.STUDY)
 public class Study extends Metadata {
 
   @Id
-  @Column(name = ID, updatable = false, unique = true, nullable = false)
+  @Column(name = TableAttributeNames.ID,
+      updatable = false, unique = true, nullable = false)
   private String studyId;
 
-  private String name="";
-  private String organization="";
-  private String description="";
+  @Column(name = TableAttributeNames.NAME, nullable = false)
+  private String name;
+
+  @Column(name = TableAttributeNames.ORGANIZATION, nullable = false)
+  private String organization;
+
+  @Column(name = TableAttributeNames.DESCRIPTION, nullable = false)
+  private String description;
+
+//  @OneToMany(fetch = FetchType.LAZY, mappedBy = TableNames.FILE)
+//  private List<File> files;
+
+  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  private List<Donor> donors;
+
+  public Study withDonor(@NonNull Donor donor){
+    initDonor();
+    donors.add(donor);
+    if (donor.getStudy() != this){
+      donor.setStudy(this);
+    }
+    return this;
+  }
+
+  private void initDonor(){
+    if (isNull(donors)){
+      donors = newArrayList();
+    }
+  }
 
   public static Study create(@NonNull String id, String name, String org, String desc) {
-      val s = new Study();
-      s.setStudyId(id);
-      s.setName(name);
-      s.setOrganization(org);
-      s.setDescription(desc);
-      return s;
+    val s = new Study();
+    s.setStudyId(id);
+    s.setName(name);
+    s.setOrganization(org);
+    s.setDescription(desc);
+    return s;
   }
 
 }
