@@ -39,6 +39,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import java.util.List;
 
+import static com.google.common.collect.Lists.newArrayList;
 import static org.icgc.dcc.song.server.model.enums.Constants.SPECIMEN_CLASS;
 import static org.icgc.dcc.song.server.model.enums.Constants.SPECIMEN_TYPE;
 import static org.icgc.dcc.song.server.model.enums.Constants.validate;
@@ -72,7 +73,7 @@ public class Specimen extends Metadata {
   @OneToMany(cascade = CascadeType.ALL,
       fetch = FetchType.LAZY,
       mappedBy = ModelAttributeNames.SPECIMEN)
-  private List<Sample> samples;
+  private List<Sample> samples = newArrayList();
 
   public static Specimen createSpecimen(String id, String submitterId, String specimenClass, String type){
     val s = new Specimen();

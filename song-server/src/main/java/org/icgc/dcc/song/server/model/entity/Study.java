@@ -24,6 +24,7 @@ import lombok.ToString;
 import lombok.val;
 import org.icgc.dcc.song.server.model.Metadata;
 import org.icgc.dcc.song.server.model.ModelAttributeNames;
+import org.icgc.dcc.song.server.model.Upload;
 import org.icgc.dcc.song.server.model.enums.TableNames;
 import org.icgc.dcc.song.server.repository.TableAttributeNames;
 
@@ -67,7 +68,12 @@ public class Study extends Metadata {
   @OneToMany(cascade = CascadeType.ALL,
       fetch = FetchType.LAZY,
       mappedBy = ModelAttributeNames.STUDY)
-  private List<Donor> donors;
+  private List<Upload> uploads = newArrayList();
+
+  @OneToMany(cascade = CascadeType.ALL,
+      fetch = FetchType.LAZY,
+      mappedBy = ModelAttributeNames.STUDY)
+  private List<Donor> donors = newArrayList();
 
   public Study withDonor(@NonNull Donor donor){
     initDonor();

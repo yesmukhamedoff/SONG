@@ -19,11 +19,11 @@ package org.icgc.dcc.song.server.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.google.common.collect.Lists;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.ToString;
+import lombok.val;
 import org.icgc.dcc.song.server.model.Metadata;
 import org.icgc.dcc.song.server.model.ModelAttributeNames;
 import org.icgc.dcc.song.server.model.enums.TableNames;
@@ -40,6 +40,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import java.util.List;
 
+import static com.google.common.collect.Lists.newArrayList;
 import static org.icgc.dcc.song.server.model.enums.Constants.DONOR_GENDER;
 import static org.icgc.dcc.song.server.model.enums.Constants.validate;
 
@@ -70,7 +71,7 @@ public class Donor extends Metadata {
   @OneToMany(cascade = CascadeType.ALL,
       fetch = FetchType.LAZY,
       mappedBy = ModelAttributeNames.DONOR )
-  private List<Specimen> specimens = Lists.newArrayList();
+  private List<Specimen> specimens = newArrayList();
 
   @Column(name = TableAttributeNames.SUBMITTER_ID, nullable = false)
   private String donorSubmitterId;
@@ -90,6 +91,14 @@ public class Donor extends Metadata {
     if (specimen.getDonor() != this){
       specimen.setDonor(this);
     }
+  }
+
+  public static Donor createDonor(String id, String submitterId, String gender){
+    val d = new Donor();
+    d.setDonorId(id);
+    d.setDonorSubmitterId(submitterId);
+    d.setDonorGender(gender);
+    return d;
   }
 
   //RTISMA_HACK: this needs to be fixed
