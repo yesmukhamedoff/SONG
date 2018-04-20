@@ -41,6 +41,7 @@ import java.net.URL;
 import java.util.Map;
 
 import static com.google.common.base.Strings.emptyToNull;
+import static org.icgc.dcc.song.core.utils.IgnoreInheritedAnalysisIntrospector.createIgnoreInheritedIntrospector;
 
 /**
  * Utility functions related to deal with JSON
@@ -51,6 +52,7 @@ public class JsonUtils {
   private static final String DOUBLE_QUOTE = "\"";
 
   protected static final ObjectMapper mapper = mapper();
+
 
   public static ObjectMapper mapper() {
     val specialModule = new SimpleModule();
@@ -72,6 +74,11 @@ public class JsonUtils {
     mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
     mapper.enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS);
     return mapper;
+  }
+
+  public static ObjectMapper buildIgnoringMapper(Class<?> tClass){
+    val introspector = createIgnoreInheritedIntrospector(tClass);
+    return mapper().setAnnotationIntrospector(introspector);
   }
 
   public static JsonNode readTree(String json) throws  IOException {

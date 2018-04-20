@@ -90,6 +90,12 @@
             <artifactId>hibernate-native-json</artifactId>
         </dependency>
 
+        <!-- Hibernate compile time annotation validation -->
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-validator-annotation-processor</artifactId>
+        </dependency>
+
         <!-- JSON -->
         <dependency>
             <groupId>com.networknt</groupId>

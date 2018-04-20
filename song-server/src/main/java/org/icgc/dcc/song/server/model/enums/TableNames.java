@@ -13,9 +13,9 @@ public class TableNames {
 	public static final String SAMPLE						=	"Sample";
 	public static final String ANALYSIS					=	"Analysis";
 	public static final String FILE							=	"File";
-	public static final String SAMPLESET				=	"SampleSet";
-	public static final String SEQUENCINGREAD		=	"SequencingRead";
-	public static final String VARIANTCALL			=	"VariantCall";
+	public static final String SAMPLESET				=	"Sampleset";
+	public static final String SEQUENCINGREAD		=	"sequencingread";
+	public static final String VARIANTCALL			=	"variantcall";
 	public static final String UPLOAD						=	"Upload";
 	public static final String INFO							=	"Info";
 
