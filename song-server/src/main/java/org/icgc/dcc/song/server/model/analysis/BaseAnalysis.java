@@ -9,6 +9,7 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.icgc.dcc.song.server.model.Metadata;
 import org.icgc.dcc.song.server.model.ModelAttributeNames;
+import org.icgc.dcc.song.server.model.entity.File;
 import org.icgc.dcc.song.server.model.entity.Study;
 import org.icgc.dcc.song.server.model.enums.Constants;
 import org.icgc.dcc.song.server.model.enums.TableNames;
@@ -17,13 +18,17 @@ import org.icgc.dcc.song.server.repository.TableAttributeNames;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import java.util.List;
 
+import static com.google.common.collect.Lists.newArrayList;
 import static org.icgc.dcc.song.server.model.enums.AnalysisStates.UNPUBLISHED;
 
 @Entity
@@ -63,8 +68,10 @@ public class BaseAnalysis extends Metadata implements Analysis {
   //    @OneToMany
   //    private List<CompositeEntity> sample;
 
-  //    @OneToMany
-  //    private List<File> file;
+  @OneToMany(cascade = CascadeType.ALL,
+      fetch = FetchType.LAZY,
+      mappedBy = ModelAttributeNames.ANALYSIS )
+  private List<File> files = newArrayList();
 
   @Override
   public void setAnalysisState(String state) {

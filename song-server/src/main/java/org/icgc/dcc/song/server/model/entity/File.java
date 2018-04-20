@@ -24,35 +24,66 @@ import lombok.NonNull;
 import lombok.ToString;
 import lombok.val;
 import org.icgc.dcc.song.server.model.Metadata;
+import org.icgc.dcc.song.server.model.analysis.BaseAnalysis;
 import org.icgc.dcc.song.server.model.enums.AccessTypes;
 import org.icgc.dcc.song.server.model.enums.Constants;
+import org.icgc.dcc.song.server.model.enums.TableNames;
+import org.icgc.dcc.song.server.repository.TableAttributeNames;
 
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 import java.io.Serializable;
 
 import static org.icgc.dcc.song.server.model.enums.AccessTypes.resolveAccessType;
 
+@Entity
+@Table(name = TableNames.FILE)
 @EqualsAndHashCode(callSuper = true)
 @JsonInclude(JsonInclude.Include.NON_ABSENT)
 @ToString(callSuper = true)
 @Data
 public class File extends Metadata implements Serializable {
 
-  private String objectId = "";
-  private String analysisId = "";
-  private String fileName = "";
-  private String studyId = "";
-  private Long fileSize = -1L;
-  private String fileType = "";
-  private String fileMd5sum = "";
-  private String fileAccess= "";
+  @Id
+  @Column(name = TableAttributeNames.ID, updatable = false, unique = true, nullable = false)
+  private String objectId;
 
-  public static File create(String id, String analysisId, String name, String study, Long size,
+  @ManyToOne(cascade = CascadeType.ALL,
+      fetch = FetchType.EAGER)
+  @JoinColumn(name = TableAttributeNames.ANALYSIS_ID)
+  private BaseAnalysis analysis;
+
+  @ManyToOne(cascade = CascadeType.ALL,
+      fetch = FetchType.EAGER)
+  @JoinColumn(name = TableAttributeNames.STUDY_ID)
+  private Study study;
+
+  @Column(name = TableAttributeNames.NAME, nullable = false)
+  private String fileName;
+
+  @Column(name = TableAttributeNames.SIZE, nullable = false)
+  private Long fileSize;
+
+  @Column(name = TableAttributeNames.TYPE, nullable = false)
+  private String fileType;
+
+  @Column(name = TableAttributeNames.MD5, nullable = false)
+  private String fileMd5sum;
+
+  @Column(name = TableAttributeNames.ACCESS, nullable = false)
+  private String fileAccess;
+
+  public static File create(String id, String name, Long size,
                             String type, String md5, AccessTypes access) {
     val f = new File();
     f.setObjectId(id);
-    f.setAnalysisId(analysisId);
     f.setFileName(name);
-    f.setStudyId(study);
     f.setFileSize(size);
     f.setFileType(type);
     f.setFileMd5sum(md5);
