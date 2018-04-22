@@ -17,11 +17,14 @@
 
 package org.icgc.dcc.song.server.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.val;
+import org.icgc.dcc.song.server.model.JsonAttributeNames;
 import org.icgc.dcc.song.server.model.Metadata;
 import org.icgc.dcc.song.server.model.ModelAttributeNames;
 import org.icgc.dcc.song.server.model.analysis.BaseAnalysis;
@@ -55,10 +58,12 @@ public class Sample extends Metadata {
       updatable = false, unique = true, nullable = false)
   private String sampleId;
 
+  @JsonIgnore
   @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
   @JoinColumn(name = TableAttributeNames.SPECIMEN_ID, nullable = false)
   private Specimen specimen;
 
+  @JsonIgnore
   @ManyToMany(mappedBy = ModelAttributeNames.SAMPLES,
       cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   private List<BaseAnalysis> analyses = newArrayList();
@@ -68,6 +73,11 @@ public class Sample extends Metadata {
 
   @Column(name = TableAttributeNames.TYPE, nullable = false)
   private String sampleType;
+
+  @JsonGetter(value = JsonAttributeNames.SPECIMEN_ID)
+  public String getSpecimenId(){
+    return getSpecimen().getSpecimenId();
+  }
 
   public static Sample createSample(String id, String sampleSubmitterId, String type){
     val s = new Sample();

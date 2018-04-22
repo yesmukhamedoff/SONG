@@ -17,12 +17,15 @@
 
 package org.icgc.dcc.song.server.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.ToString;
 import lombok.val;
+import org.icgc.dcc.song.server.model.JsonAttributeNames;
 import org.icgc.dcc.song.server.model.Metadata;
 import org.icgc.dcc.song.server.model.analysis.BaseAnalysis;
 import org.icgc.dcc.song.server.model.enums.AccessTypes;
@@ -54,11 +57,13 @@ public class File extends Metadata implements Serializable {
   @Column(name = TableAttributeNames.ID, updatable = false, unique = true, nullable = false)
   private String objectId;
 
+  @JsonIgnore
   @ManyToOne(cascade = CascadeType.ALL,
       fetch = FetchType.EAGER)
   @JoinColumn(name = TableAttributeNames.ANALYSIS_ID, nullable = false)
   private BaseAnalysis analysis;
 
+  @JsonIgnore
   @ManyToOne(cascade = CascadeType.ALL,
       fetch = FetchType.EAGER)
   @JoinColumn(name = TableAttributeNames.STUDY_ID, nullable = false)
@@ -78,6 +83,16 @@ public class File extends Metadata implements Serializable {
 
   @Column(name = TableAttributeNames.ACCESS, nullable = false)
   private String fileAccess;
+
+  @JsonGetter(value = JsonAttributeNames.ANALYSIS_ID)
+  public String getAnalysisId(){
+    return getAnalysis().getAnalysisId();
+  }
+
+  @JsonGetter(value = JsonAttributeNames.STUDY_ID)
+  public String getStudyId(){
+    return getStudy().getStudyId();
+  }
 
   public static File create(String id, String name, Long size,
                             String type, String md5, AccessTypes access) {

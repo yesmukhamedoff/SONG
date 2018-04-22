@@ -16,6 +16,8 @@
  */
 package org.icgc.dcc.song.server.model;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonRawValue;
@@ -69,6 +71,7 @@ public class Upload {
       updatable = false, unique = true, nullable = false)
   private String uploadId;
 
+  @JsonIgnore
   @ManyToOne(cascade = CascadeType.ALL,
       fetch = FetchType.EAGER)
   @JoinColumn(name = TableAttributeNames.STUDY_ID, nullable = false)
@@ -91,6 +94,11 @@ public class Upload {
 
   @Column(name = TableAttributeNames.UPDATED_AT, nullable = false)
   private LocalDateTime updatedAt;
+
+  @JsonGetter(value = JsonAttributeNames.STUDY_ID)
+  public String getStudyId(){
+    return getStudy().getStudyId();
+  }
 
   public void setState(@NonNull UploadStates state){
     this.state = state.getText();

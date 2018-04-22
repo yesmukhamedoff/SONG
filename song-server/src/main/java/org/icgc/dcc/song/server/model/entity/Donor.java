@@ -17,6 +17,8 @@
 
 package org.icgc.dcc.song.server.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Data;
@@ -24,6 +26,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.ToString;
 import lombok.val;
+import org.icgc.dcc.song.server.model.JsonAttributeNames;
 import org.icgc.dcc.song.server.model.Metadata;
 import org.icgc.dcc.song.server.model.ModelAttributeNames;
 import org.icgc.dcc.song.server.model.enums.TableNames;
@@ -44,7 +47,7 @@ import static com.google.common.collect.Lists.newArrayList;
 import static org.icgc.dcc.song.server.model.enums.Constants.DONOR_GENDER;
 import static org.icgc.dcc.song.server.model.enums.Constants.validate;
 
-@Entity(name = TableNames.DONOR)
+@Entity
 @Table(name = TableNames.DONOR)
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -63,11 +66,13 @@ public class Donor extends Metadata {
   @Column(name = TableAttributeNames.ID, updatable = false, unique = true, nullable = false)
   private String donorId;
 
+  @JsonIgnore
   @ManyToOne(cascade = CascadeType.ALL,
       fetch = FetchType.EAGER)
   @JoinColumn(name = TableAttributeNames.STUDY_ID, nullable = false)
   private Study study;
 
+  @JsonIgnore
   @OneToMany(cascade = CascadeType.ALL,
       fetch = FetchType.LAZY,
       mappedBy = ModelAttributeNames.DONOR)
@@ -78,6 +83,11 @@ public class Donor extends Metadata {
 
   @Column(name = TableAttributeNames.GENDER, nullable = false)
   private String donorGender;
+
+  @JsonGetter(value = JsonAttributeNames.STUDY_ID)
+  public String getStudyId(){
+    return getStudy().getStudyId();
+  }
 
   public void setStudy(@NonNull Study study){
     this.study = study;

@@ -16,6 +16,7 @@
  */
 package org.icgc.dcc.song.server.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -63,21 +64,25 @@ public class Study extends Metadata {
   @Column(name = TableAttributeNames.DESCRIPTION, nullable = false)
   private String description;
 
+  @JsonIgnore
   @OneToMany(cascade = CascadeType.ALL,
       fetch = FetchType.LAZY,
       mappedBy = ModelAttributeNames.STUDY)
   private List<File> files = newArrayList();
 
+  @JsonIgnore
   @OneToMany(cascade = CascadeType.ALL,
       fetch = FetchType.LAZY,
       mappedBy = ModelAttributeNames.STUDY)
   private List<BaseAnalysis> analyses = newArrayList();
 
+  @JsonIgnore
   @OneToMany(cascade = CascadeType.ALL,
       fetch = FetchType.LAZY,
       mappedBy = ModelAttributeNames.STUDY)
   private List<Upload> uploads = newArrayList();
 
+  @JsonIgnore
   @OneToMany(cascade = CascadeType.ALL,
       fetch = FetchType.LAZY,
       mappedBy = ModelAttributeNames.STUDY)

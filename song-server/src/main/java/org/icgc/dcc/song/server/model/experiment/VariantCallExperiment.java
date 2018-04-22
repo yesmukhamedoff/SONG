@@ -31,7 +31,6 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name = TableNames.VARIANTCALL)
-
 @EqualsAndHashCode(callSuper=true)
 @ToString(callSuper = true)
 @Data

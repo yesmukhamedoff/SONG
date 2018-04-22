@@ -17,12 +17,15 @@
 
 package org.icgc.dcc.song.server.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.ToString;
 import lombok.val;
+import org.icgc.dcc.song.server.model.JsonAttributeNames;
 import org.icgc.dcc.song.server.model.Metadata;
 import org.icgc.dcc.song.server.model.ModelAttributeNames;
 import org.icgc.dcc.song.server.model.enums.TableNames;
@@ -57,6 +60,7 @@ public class Specimen extends Metadata {
       updatable = false, unique = true, nullable = false)
   private String specimenId;
 
+  @JsonIgnore
   @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
   @JoinColumn(name = TableAttributeNames.DONOR_ID, nullable = false)
   private Donor donor;
@@ -70,10 +74,16 @@ public class Specimen extends Metadata {
   @Column(name = TableAttributeNames.TYPE, nullable = false)
   private String specimenType;
 
+  @JsonIgnore
   @OneToMany(cascade = CascadeType.ALL,
       fetch = FetchType.LAZY,
       mappedBy = ModelAttributeNames.SPECIMEN)
   private List<Sample> samples = newArrayList();
+
+  @JsonGetter(value = JsonAttributeNames.DONOR_ID)
+  public String getDonorId(){
+    return getDonor().getDonorId();
+  }
 
   public static Specimen createSpecimen(String id, String submitterId, String specimenClass, String type){
     val s = new Specimen();
