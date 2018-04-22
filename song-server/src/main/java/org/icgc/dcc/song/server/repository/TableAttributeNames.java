@@ -51,6 +51,7 @@ public class TableAttributeNames {
     public static final String CLASS="class";
 
     public static final String ANALYSIS_ID="analysis_id";
+    public static final String SAMPLE_ID="sample_id";
 
     public static final String ORGANIZATION="organization";
     public static final String DESCRIPTION="description";

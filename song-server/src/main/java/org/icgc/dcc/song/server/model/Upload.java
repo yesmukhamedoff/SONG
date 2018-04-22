@@ -19,8 +19,10 @@ package org.icgc.dcc.song.server.model;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonRawValue;
+import com.google.common.base.Joiner;
 import lombok.Data;
 import lombok.NonNull;
+import lombok.ToString;
 import lombok.val;
 import org.icgc.dcc.song.server.model.entity.Study;
 import org.icgc.dcc.song.server.model.enums.TableNames;
@@ -29,7 +31,6 @@ import org.icgc.dcc.song.server.repository.TableAttributeNames;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
-import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
@@ -37,22 +38,31 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
+import static com.google.common.collect.Lists.newArrayList;
 import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
 import static org.icgc.dcc.song.server.model.enums.UploadStates.resolveState;
 
 @JsonInclude(JsonInclude.Include.ALWAYS)
-@JsonPropertyOrder({ "analysisId", "uploadId", "studyId", "state", "createdAt", "updatedAt", "errors", "payload"
+@JsonPropertyOrder({
+    ModelAttributeNames.ANALYSIS_ID,
+    ModelAttributeNames.UPLOAD_ID,
+    ModelAttributeNames.STUDY_ID,
+    ModelAttributeNames.STATE,
+    ModelAttributeNames.CREATED_AT,
+    ModelAttributeNames.UPDATED_AT,
+    ModelAttributeNames.ERRORS,
+    ModelAttributeNames.PAYLOAD
 })
-
 @Data
 @Entity
 @Table(name = TableNames.UPLOAD)
+@ToString(exclude = { ModelAttributeNames.STUDY })
 public class Upload {
+
+  private static final String ERROR_DELIM = "\\|";
 
   @Id
   @Column(name = TableAttributeNames.ID,
@@ -61,18 +71,17 @@ public class Upload {
 
   @ManyToOne(cascade = CascadeType.ALL,
       fetch = FetchType.EAGER)
-  @JoinColumn(name = TableAttributeNames.STUDY_ID)
+  @JoinColumn(name = TableAttributeNames.STUDY_ID, nullable = false)
   private Study study;
 
   @Column(name = TableAttributeNames.STATE, nullable = false)
   private String state;
 
-  @Column(name = TableAttributeNames.ANALYSIS_ID)
+  @Column(name = TableAttributeNames.ANALYSIS_ID, nullable = true)
   private String analysisId;
 
-  @ElementCollection
-  @Column(name = TableAttributeNames.ANALYSIS_ID, nullable = false)
-  private List<String> errors = new ArrayList<>();
+  @Column(name = TableAttributeNames.ERRORS, nullable = true)
+  private String errors;
 
   @Column(name = TableAttributeNames.PAYLOAD, nullable = false)
   private String payload;
@@ -110,16 +119,25 @@ public class Upload {
   }
 
   public void setErrors(String errorString) {
+    this.errors = errorString;
     if (isNull(errorString)) {
-      errorString = "";
+      this.errors = "";
     }
+  }
 
-    this.errors.clear();
-    this.errors.addAll(asList(errorString.split("\\|")));
+  public Collection<String> getErrors(){
+    if(isNull(errors)){
+      return newArrayList();
+    } else {
+      return asList(errors.split(ERROR_DELIM));
+    }
   }
 
   public void addErrors(Collection<String> errors) {
-    this.errors.addAll(errors);
+    val e = getErrors();
+    e.addAll(errors);
+    this.errors = Joiner.on(ERROR_DELIM).join(e);
   }
+
 
 }

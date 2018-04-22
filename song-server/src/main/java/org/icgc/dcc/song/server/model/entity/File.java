@@ -56,12 +56,12 @@ public class File extends Metadata implements Serializable {
 
   @ManyToOne(cascade = CascadeType.ALL,
       fetch = FetchType.EAGER)
-  @JoinColumn(name = TableAttributeNames.ANALYSIS_ID)
+  @JoinColumn(name = TableAttributeNames.ANALYSIS_ID, nullable = false)
   private BaseAnalysis analysis;
 
   @ManyToOne(cascade = CascadeType.ALL,
       fetch = FetchType.EAGER)
-  @JoinColumn(name = TableAttributeNames.STUDY_ID)
+  @JoinColumn(name = TableAttributeNames.STUDY_ID, nullable = false)
   private Study study;
 
   @Column(name = TableAttributeNames.NAME, nullable = false)

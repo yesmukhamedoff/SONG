@@ -10,6 +10,7 @@ import lombok.ToString;
 import org.icgc.dcc.song.server.model.Metadata;
 import org.icgc.dcc.song.server.model.ModelAttributeNames;
 import org.icgc.dcc.song.server.model.entity.File;
+import org.icgc.dcc.song.server.model.entity.Sample;
 import org.icgc.dcc.song.server.model.entity.Study;
 import org.icgc.dcc.song.server.model.enums.Constants;
 import org.icgc.dcc.song.server.model.enums.TableNames;
@@ -23,6 +24,8 @@ import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -54,9 +57,9 @@ public class BaseAnalysis extends Metadata implements Analysis {
       updatable = false, unique = true, nullable = false)
   private String analysisId="";
 
-  @ManyToOne(cascade = CascadeType.ALL)
-  @JoinColumn(name = TableAttributeNames.STUDY_ID)
   @JsonIgnore
+  @ManyToOne(cascade = CascadeType.ALL)
+  @JoinColumn(name = TableAttributeNames.STUDY_ID, nullable = false)
   private Study study;
 
   @Column(name = TableAttributeNames.STATE)
@@ -65,13 +68,17 @@ public class BaseAnalysis extends Metadata implements Analysis {
   @Column(name = TableAttributeNames.TYPE)
   private String analysisType;
 
-  //    @OneToMany
-  //    private List<CompositeEntity> sample;
-
   @OneToMany(cascade = CascadeType.ALL,
       fetch = FetchType.LAZY,
-      mappedBy = ModelAttributeNames.ANALYSIS )
+      mappedBy = ModelAttributeNames.ANALYSIS)
   private List<File> files = newArrayList();
+
+  @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  @JoinTable(
+      name = TableNames.SAMPLESET,
+      joinColumns = @JoinColumn(name = TableAttributeNames.ANALYSIS_ID),
+      inverseJoinColumns = @JoinColumn(name = TableAttributeNames.SAMPLE_ID))
+  private List<Sample> samples;
 
   @Override
   public void setAnalysisState(String state) {

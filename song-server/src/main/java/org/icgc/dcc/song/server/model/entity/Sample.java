@@ -24,6 +24,7 @@ import lombok.ToString;
 import lombok.val;
 import org.icgc.dcc.song.server.model.Metadata;
 import org.icgc.dcc.song.server.model.ModelAttributeNames;
+import org.icgc.dcc.song.server.model.analysis.BaseAnalysis;
 import org.icgc.dcc.song.server.model.enums.Constants;
 import org.icgc.dcc.song.server.model.enums.TableNames;
 import org.icgc.dcc.song.server.repository.TableAttributeNames;
@@ -34,8 +35,12 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import java.util.List;
+
+import static com.google.common.collect.Lists.newArrayList;
 
 @Entity
 @Table(name = TableNames.SAMPLE)
@@ -51,8 +56,12 @@ public class Sample extends Metadata {
   private String sampleId;
 
   @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-  @JoinColumn(name = TableAttributeNames.SPECIMEN_ID)
+  @JoinColumn(name = TableAttributeNames.SPECIMEN_ID, nullable = false)
   private Specimen specimen;
+
+  @ManyToMany(mappedBy = ModelAttributeNames.SAMPLES,
+      cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  private List<BaseAnalysis> analyses = newArrayList();
 
   @Column(name = TableAttributeNames.SUBMITTER_ID, nullable = false)
   private String sampleSubmitterId;

@@ -65,12 +65,12 @@ public class Donor extends Metadata {
 
   @ManyToOne(cascade = CascadeType.ALL,
       fetch = FetchType.EAGER)
-  @JoinColumn(name = TableAttributeNames.STUDY_ID)
+  @JoinColumn(name = TableAttributeNames.STUDY_ID, nullable = false)
   private Study study;
 
   @OneToMany(cascade = CascadeType.ALL,
       fetch = FetchType.LAZY,
-      mappedBy = ModelAttributeNames.DONOR )
+      mappedBy = ModelAttributeNames.DONOR)
   private List<Specimen> specimens = newArrayList();
 
   @Column(name = TableAttributeNames.SUBMITTER_ID, nullable = false)

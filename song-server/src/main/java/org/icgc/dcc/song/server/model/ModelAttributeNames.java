@@ -17,6 +17,7 @@ public class ModelAttributeNames {
   public static final String STUDY_ID = "studyId";
   public static final String DONOR_GENDER = "donorGender";
   public static final String SPECIMENS = "specimens";
+  public static final String SAMPLES = "samples";
   public static final String SPECIMEN = "specimen";
   public static final String INFO = "info";
   public static final String STUDY = "study";
@@ -27,5 +28,10 @@ public class ModelAttributeNames {
 	public static final String LIBRARY_STRATEGY	=	"libraryStrategy";
 	public static final String PAIRED_END				=	"pairedEnd";
 	public static final String REFERENCE_GENOME	=	"referenceGenome";
-
+	public static final String UPLOAD_ID		= "uploadId";
+	public static final String CREATED_AT	= "createdAt";
+	public static final String UPDATED_AT	= "updatedAt";
+	public static final String ERRORS			= "errors";
+	public static final String PAYLOAD		= "payload";
+  public static final String STATE = "state";
 }

@@ -58,7 +58,7 @@ public class Specimen extends Metadata {
   private String specimenId;
 
   @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-  @JoinColumn(name = TableAttributeNames.DONOR_ID)
+  @JoinColumn(name = TableAttributeNames.DONOR_ID, nullable = false)
   private Donor donor;
 
   @Column(name = TableAttributeNames.SUBMITTER_ID, nullable = false)
