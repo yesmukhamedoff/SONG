@@ -13,6 +13,7 @@ public class ModelAttributeNames {
   public static final String ANALYSIS_ID= "analysisId";
   public static final String ANALYSIS_TYPE = "analysisType";
   public static final String ANALYSIS = "analysis";
+  public static final String ANALYSES = "analyses";
   public static final String DONOR_SUBMITTER_ID = "donorSubmitterId";
   public static final String STUDY_ID = "studyId";
   public static final String DONOR_GENDER = "donorGender";
@@ -29,9 +30,11 @@ public class ModelAttributeNames {
 	public static final String PAIRED_END				=	"pairedEnd";
 	public static final String REFERENCE_GENOME	=	"referenceGenome";
 	public static final String UPLOAD_ID		= "uploadId";
+  public static final String UPLOADS = "uploads";
 	public static final String CREATED_AT	= "createdAt";
 	public static final String UPDATED_AT	= "updatedAt";
 	public static final String ERRORS			= "errors";
 	public static final String PAYLOAD		= "payload";
   public static final String STATE = "state";
+  public static final String FILES = "files";
 }
