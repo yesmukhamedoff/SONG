@@ -1,9 +1,8 @@
-package org.icgc.dcc.song.server.model.entity.single;
+package org.icgc.dcc.song.server.model.entity.donor;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
-import org.icgc.dcc.song.server.model.entity.AbstractDonor;
 import org.icgc.dcc.song.server.model.enums.TableNames;
 import org.icgc.dcc.song.server.repository.TableAttributeNames;
 
@@ -16,7 +15,7 @@ import javax.persistence.Table;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
-public class SingleDonor extends AbstractDonor{
+public class SterileDonor extends AbstractDonorEntity {
 
   @Column(name = TableAttributeNames.STUDY_ID, nullable = false)
   private String studyId;

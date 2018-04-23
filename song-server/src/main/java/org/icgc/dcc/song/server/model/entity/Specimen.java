@@ -22,13 +22,13 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NonNull;
 import lombok.ToString;
 import lombok.val;
 import org.icgc.dcc.song.server.model.JsonAttributeNames;
 import org.icgc.dcc.song.server.model.Metadata;
 import org.icgc.dcc.song.server.model.ModelAttributeNames;
-import org.icgc.dcc.song.server.model.entity.composites.CompositeDonor;
+import org.icgc.dcc.song.server.model.entity.donor.Donor;
+import org.icgc.dcc.song.server.model.entity.sample.Sample;
 import org.icgc.dcc.song.server.model.enums.TableNames;
 import org.icgc.dcc.song.server.repository.TableAttributeNames;
 
@@ -64,7 +64,7 @@ public class Specimen extends Metadata {
   @JsonIgnore
   @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
   @JoinColumn(name = TableAttributeNames.DONOR_ID, nullable = false)
-  private CompositeDonor donor;
+  private Donor donor;
 
   @Column(name = TableAttributeNames.SUBMITTER_ID, nullable = false)
   private String specimenSubmitterId;
@@ -108,12 +108,12 @@ public class Specimen extends Metadata {
 //    return s;
 //  }
 
-  public void setCompositeDonor(@NonNull CompositeDonor compositeDonor){
-    this.donor = compositeDonor;
-    if (!compositeDonor.getSpecimens().contains(this)){
-      compositeDonor.addSpecimen(this);
-    }
-  }
+//  public void setDonor(@NonNull Donor compositeDonor){
+//    this.donor = compositeDonor;
+//    if (!compositeDonor.getSpecimens().contains(this)){
+//      compositeDonor.addSpecimen(this);
+//    }
+//  }
 
   public void setSpecimenClass(String specimenClass) {
     validate(SPECIMEN_CLASS, specimenClass);

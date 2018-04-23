@@ -26,7 +26,7 @@ import lombok.Data;
 import lombok.NonNull;
 import lombok.ToString;
 import lombok.val;
-import org.icgc.dcc.song.server.model.entity.composites.CompositeStudy;
+import org.icgc.dcc.song.server.model.entity.study.Study;
 import org.icgc.dcc.song.server.model.enums.TableNames;
 import org.icgc.dcc.song.server.model.enums.UploadStates;
 import org.icgc.dcc.song.server.repository.TableAttributeNames;
@@ -75,7 +75,7 @@ public class Upload {
   @ManyToOne(cascade = CascadeType.ALL,
       fetch = FetchType.EAGER)
   @JoinColumn(name = TableAttributeNames.STUDY_ID, nullable = false)
-  private CompositeStudy study;
+  private Study study;
 
   @Column(name = TableAttributeNames.STATE, nullable = false)
   private String state;

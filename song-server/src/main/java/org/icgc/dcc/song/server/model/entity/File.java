@@ -28,7 +28,7 @@ import lombok.val;
 import org.icgc.dcc.song.server.model.JsonAttributeNames;
 import org.icgc.dcc.song.server.model.Metadata;
 import org.icgc.dcc.song.server.model.analysis.BaseAnalysis;
-import org.icgc.dcc.song.server.model.entity.composites.CompositeStudy;
+import org.icgc.dcc.song.server.model.entity.study.Study;
 import org.icgc.dcc.song.server.model.enums.AccessTypes;
 import org.icgc.dcc.song.server.model.enums.Constants;
 import org.icgc.dcc.song.server.model.enums.TableNames;
@@ -68,7 +68,7 @@ public class File extends Metadata implements Serializable {
   @ManyToOne(cascade = CascadeType.ALL,
       fetch = FetchType.EAGER)
   @JoinColumn(name = TableAttributeNames.STUDY_ID, nullable = false)
-  private CompositeStudy study;
+  private Study study;
 
   @Column(name = TableAttributeNames.NAME, nullable = false)
   private String fileName;

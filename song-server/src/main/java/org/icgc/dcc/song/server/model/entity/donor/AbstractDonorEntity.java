@@ -1,4 +1,4 @@
-package org.icgc.dcc.song.server.model.entity;
+package org.icgc.dcc.song.server.model.entity.donor;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -28,7 +28,7 @@ import static org.icgc.dcc.song.server.model.enums.Constants.validate;
     ModelAttributeNames.SPECIMENS,
     ModelAttributeNames.INFO })
 @JsonInclude(JsonInclude.Include.ALWAYS)
-public abstract class AbstractDonor extends Metadata implements Donor {
+public abstract class AbstractDonorEntity extends Metadata {
 
   @Id
   @Column(name = TableAttributeNames.ID, updatable = false, unique = true, nullable = false)
@@ -44,4 +44,7 @@ public abstract class AbstractDonor extends Metadata implements Donor {
     validate(DONOR_GENDER, gender);
     this.donorGender = gender;
   }
+
+  abstract public String getStudyId();
+
 }

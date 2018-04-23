@@ -14,36 +14,39 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package org.icgc.dcc.song.server.model.entity;
+
+package org.icgc.dcc.song.server.model.entity.sample;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import org.icgc.dcc.song.server.model.Metadata;
+import org.icgc.dcc.song.server.model.enums.Constants;
 import org.icgc.dcc.song.server.repository.TableAttributeNames;
 
 import javax.persistence.Column;
-import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
 
-@EqualsAndHashCode(callSuper=true)
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
-@Data
 @MappedSuperclass
-public class AbstractStudy extends Metadata implements Study {
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
+@Data
+@JsonInclude(JsonInclude.Include.ALWAYS)
+public abstract class AbstractSampleData extends Metadata {
 
-  @Id
-  @Column(name = TableAttributeNames.ID,
-      updatable = false, unique = true, nullable = false)
-  private String studyId;
+  @Column(name = TableAttributeNames.SUBMITTER_ID, nullable = false)
+  private String sampleSubmitterId;
 
-  @Column(name = TableAttributeNames.NAME, nullable = false)
-  private String name;
+  @Column(name = TableAttributeNames.TYPE, nullable = false)
+  private String sampleType;
 
-  @Column(name = TableAttributeNames.ORGANIZATION, nullable = false)
-  private String organization;
+  abstract public String getSpecimenId();
 
-  @Column(name = TableAttributeNames.DESCRIPTION, nullable = false)
-  private String description;
+  public void setSampleType(String type) {
+    Constants.validate(Constants.SAMPLE_TYPE, type);
+    sampleType = type;
+  }
+
 
 }

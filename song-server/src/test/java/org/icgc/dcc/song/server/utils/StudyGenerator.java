@@ -19,10 +19,10 @@ package org.icgc.dcc.song.server.utils;
 
 import lombok.RequiredArgsConstructor;
 import org.icgc.dcc.song.core.utils.RandomGenerator;
-import org.icgc.dcc.song.server.model.entity.Study;
 import org.icgc.dcc.song.server.service.StudyService;
 
 import static lombok.AccessLevel.PRIVATE;
+import static org.icgc.dcc.song.server.model.entity.study.SterileStudy.createSterileStudy;
 
 @RequiredArgsConstructor(access = PRIVATE)
 public class StudyGenerator {
@@ -37,7 +37,7 @@ public class StudyGenerator {
       studyId = randomGenerator.generateRandomAsciiString(12);
       studyExists = studyService.isStudyExist(studyId);
     } while (studyExists);
-    studyService.saveStudy(Study.create(studyId, "", "", ""));
+    studyService.create(createSterileStudy(studyId, "", "", ""));
     return studyId;
   }
 

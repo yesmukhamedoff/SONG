@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package org.icgc.dcc.song.server.model.entity.composites;
+package org.icgc.dcc.song.server.model.entity.donor;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -28,8 +28,8 @@ import lombok.ToString;
 import lombok.val;
 import org.icgc.dcc.song.server.model.JsonAttributeNames;
 import org.icgc.dcc.song.server.model.ModelAttributeNames;
-import org.icgc.dcc.song.server.model.entity.AbstractDonor;
 import org.icgc.dcc.song.server.model.entity.Specimen;
+import org.icgc.dcc.song.server.model.entity.study.Study;
 import org.icgc.dcc.song.server.model.enums.TableNames;
 import org.icgc.dcc.song.server.repository.TableAttributeNames;
 
@@ -57,19 +57,7 @@ import static com.google.common.collect.Lists.newArrayList;
     ModelAttributeNames.SPECIMENS,
     ModelAttributeNames.INFO })
 @JsonInclude(JsonInclude.Include.ALWAYS)
-public class CompositeDonor extends AbstractDonor {
-
-  /*
-  @Id
-  @Column(name = TableAttributeNames.ID, updatable = false, unique = true, nullable = false)
-  private String donorId;
-
-  @Column(name = TableAttributeNames.SUBMITTER_ID, nullable = false)
-  private String donorSubmitterId;
-
-  @Column(name = TableAttributeNames.GENDER, nullable = false)
-  private String donorGender;
-  */
+public class Donor extends AbstractDonorEntity {
 
   @JsonGetter(value = JsonAttributeNames.STUDY_ID)
   public String getStudyId(){
@@ -80,53 +68,34 @@ public class CompositeDonor extends AbstractDonor {
   @ManyToOne(cascade = CascadeType.ALL,
       fetch = FetchType.EAGER)
   @JoinColumn(name = TableAttributeNames.STUDY_ID, nullable = false)
-  private CompositeStudy study;
+  private Study study;
 
   @OneToMany(cascade = CascadeType.ALL,
       fetch = FetchType.LAZY,
       mappedBy = ModelAttributeNames.DONOR)
   private List<Specimen> specimens = newArrayList();
 
-  public void setStudy(@NonNull CompositeStudy study){
+  public void setStudy(@NonNull Study study){
     this.study = study;
     if (!study.getDonors().contains(this)){
-      study.withDonor(this);
+      study.addDonor(this);
     }
   }
 
-  public void addSpecimen(@NonNull Specimen specimen){
-    this.specimens.add(specimen);
-    if (specimen.getDonor() != this){
-      specimen.setCompositeDonor(this);
-    }
-  }
+//
+//  public void addSpecimen(@NonNull Specimen specimen){
+//    this.specimens.add(specimen);
+//    if (specimen.getDonor() != this){
+//      specimen.setCompositeDonor(this);
+//    }
+//  }
 
-  public static CompositeDonor createDonor(String id, String submitterId, String gender){
-    val d = new CompositeDonor();
+  public static Donor createDonor(String id, String submitterId, String gender){
+    val d = new Donor();
     d.setDonorId(id);
     d.setDonorSubmitterId(submitterId);
     d.setDonorGender(gender);
     return d;
   }
-
-  //RTISMA_HACK: this needs to be fixed
-//  public static Donor create(String id, String submitterId, String studyId, String gender) {
-//    val d = new Donor();
-//    d.setDonorId(id);
-//    d.setStudy(Study.create(studyId,"","","")); //RTISMA_HACK
-//    d.setDonorSubmitterId(submitterId);
-//    d.setDonorGender(gender);
-//    return d;
-//  }
-
-  //RTISMA_TODO: remove this, should have its own validation. Need gender to be null so can create hibernate examples for
-  // finding entities. This would servce as a data and request entity
-
-  /*
-  public void setDonorGender(String gender) {
-    validate(DONOR_GENDER, gender);
-    this.donorGender = gender;
-  }
-  */
 
 }

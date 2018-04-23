@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package org.icgc.dcc.song.server.model.entity;
+package org.icgc.dcc.song.server.model.entity.sample;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -25,18 +25,15 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.val;
 import org.icgc.dcc.song.server.model.JsonAttributeNames;
-import org.icgc.dcc.song.server.model.Metadata;
 import org.icgc.dcc.song.server.model.ModelAttributeNames;
 import org.icgc.dcc.song.server.model.analysis.BaseAnalysis;
-import org.icgc.dcc.song.server.model.enums.Constants;
+import org.icgc.dcc.song.server.model.entity.Specimen;
 import org.icgc.dcc.song.server.model.enums.TableNames;
 import org.icgc.dcc.song.server.repository.TableAttributeNames;
 
 import javax.persistence.CascadeType;
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
-import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
@@ -48,15 +45,10 @@ import static com.google.common.collect.Lists.newArrayList;
 @Entity
 @Table(name = TableNames.SAMPLE)
 @EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true, exclude = { ModelAttributeNames.SPECIMEN })
+@ToString(callSuper = true, exclude = { ModelAttributeNames.SPECIMEN, ModelAttributeNames.ANALYSES })
 @Data
 @JsonInclude(JsonInclude.Include.ALWAYS)
-public class Sample extends Metadata {
-
-  @Id
-  @Column(name = TableAttributeNames.ID,
-      updatable = false, unique = true, nullable = false)
-  private String sampleId;
+public class Sample extends AbstractSampleEntity {
 
   @JsonIgnore
   @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
@@ -68,45 +60,17 @@ public class Sample extends Metadata {
       cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   private List<BaseAnalysis> analyses = newArrayList();
 
-  @Column(name = TableAttributeNames.SUBMITTER_ID, nullable = false)
-  private String sampleSubmitterId;
-
-  @Column(name = TableAttributeNames.TYPE, nullable = false)
-  private String sampleType;
-
   @JsonGetter(value = JsonAttributeNames.SPECIMEN_ID)
   public String getSpecimenId(){
     return getSpecimen().getSpecimenId();
   }
 
-  public static Sample createSample(String id, String sampleSubmitterId, String type){
+  public static Sample createLonerSample(String id, String sampleSubmitterId, String type){
     val s = new Sample();
     s.setSampleId(id);
     s.setSampleSubmitterId(sampleSubmitterId);
     s.setSampleType(type);
     return s;
   }
-
-  //RTISMA_HACK remove this create
-//  public static Sample create(String id, @NonNull String submitter, String specimenId, String type) {
-//    val sample = new Sample();
-//    sample.setSampleId(id);
-//
-//    //RTISMA_HACK
-//    sample.setSpecimen(Specimen.create(specimenId,"","",
-//        SPECIMEN_CLASS.stream().findFirst().get(),
-//        SPECIMEN_TYPE.stream().findFirst().get()));
-//    sample.setSampleSubmitterId(submitter);
-//
-//    sample.setSampleType(type);
-//
-//    return sample;
-//  }
-
-  public void setSampleType(String type) {
-    Constants.validate(Constants.SAMPLE_TYPE, type);
-    sampleType = type;
-  }
-
 
 }

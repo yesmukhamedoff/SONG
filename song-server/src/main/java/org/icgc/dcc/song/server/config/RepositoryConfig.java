@@ -1,9 +1,9 @@
 package org.icgc.dcc.song.server.config;
 
-import org.icgc.dcc.song.server.model.entity.composites.CompositeDonor;
-import org.icgc.dcc.song.server.model.entity.composites.CompositeStudy;
-import org.icgc.dcc.song.server.model.entity.single.SingleDonor;
-import org.icgc.dcc.song.server.model.entity.single.SingleStudy;
+import org.icgc.dcc.song.server.model.entity.donor.Donor;
+import org.icgc.dcc.song.server.model.entity.donor.SterileDonor;
+import org.icgc.dcc.song.server.model.entity.study.SterileStudy;
+import org.icgc.dcc.song.server.model.entity.study.Study;
 import org.icgc.dcc.song.server.repository.SpecialRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -18,23 +18,24 @@ public class RepositoryConfig {
   private EntityManager entityManager;
 
   @Bean
-  public SpecialRepo<SingleStudy, String> singleStudyRepository(){
-    return new SpecialRepo<>(SingleStudy.class, entityManager);
+  public SpecialRepo<SterileStudy, String> singleStudyRepository(){
+    return new SpecialRepo<>(SterileStudy.class, entityManager);
   }
 
   @Bean
-  public SpecialRepo<CompositeStudy, String> compositeStudyRepository(){
-    return new SpecialRepo<>(CompositeStudy.class, entityManager);
+  public SpecialRepo<Study, String> compositeStudyRepository(){
+    return new SpecialRepo<>(Study.class, entityManager);
   }
 
   @Bean
-  public SpecialRepo<SingleDonor, String> singleDonorRepository(){
-    return new SpecialRepo<>(SingleDonor.class, entityManager);
+  public SpecialRepo<SterileDonor, String> singleDonorRepository(){
+    return new SpecialRepo<>(SterileDonor.class, entityManager);
   }
 
   @Bean
-  public SpecialRepo<CompositeDonor, String> compositeDonorRepository(){
-    return new SpecialRepo<>(CompositeDonor.class, entityManager);
+  public SpecialRepo<Donor, String> compositeDonorRepository(){
+    return new SpecialRepo<>(Donor.class, entityManager);
   }
+
 
 }

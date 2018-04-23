@@ -18,7 +18,7 @@ package org.icgc.dcc.song.server.repository;
 
 import lombok.Getter;
 import lombok.val;
-import org.icgc.dcc.song.server.model.entity.Sample;
+import org.icgc.dcc.song.server.model.entity.sample.Sample;
 import org.icgc.dcc.song.server.model.entity.Specimen;
 import org.springframework.data.jpa.repository.JpaRepository;
 

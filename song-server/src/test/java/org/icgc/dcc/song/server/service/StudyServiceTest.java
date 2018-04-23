@@ -19,7 +19,7 @@ package org.icgc.dcc.song.server.service;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.dcc.song.core.utils.RandomGenerator;
-import org.icgc.dcc.song.server.model.entity.Study;
+import org.icgc.dcc.song.server.model.entity.study.SterileStudy;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,13 +32,13 @@ import static org.icgc.dcc.song.core.exceptions.ServerErrors.STUDY_ALREADY_EXIST
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.STUDY_ID_DOES_NOT_EXIST;
 import static org.icgc.dcc.song.core.testing.SongErrorAssertions.assertSongError;
 import static org.icgc.dcc.song.core.utils.RandomGenerator.createRandomGenerator;
+import static org.icgc.dcc.song.server.model.entity.study.SterileStudy.createSterileStudy;
 import static org.icgc.dcc.song.server.utils.TestConstants.DEFAULT_STUDY_ID;
 import static org.icgc.dcc.song.server.utils.TestFiles.getInfoName;
 
 @Slf4j
 @SpringBootTest
 @RunWith(SpringRunner.class)
-//RTISMA_HACK @TestExecutionListeners({ DependencyInjectionTestExecutionListener.class})
 @ActiveProfiles("dev")
 public class StudyServiceTest {
 
@@ -65,25 +65,25 @@ public class StudyServiceTest {
     val organization = randomGenerator.generateRandomUUID().toString();
     val name  = randomGenerator.generateRandomAsciiString(10);
     val description = randomGenerator.generateRandomUUID().toString();
-    val study = Study.create(studyId, name, organization, description);
+    val sterileStudy = createSterileStudy(studyId, name, organization, description);
     assertThat(service.isStudyExist(studyId)).isFalse();
-    service.saveStudy(study);
+    service.create(sterileStudy);
     val readStudy = service.read(studyId);
-    assertThat(readStudy).isEqualToComparingFieldByFieldRecursively(study);
+    assertThat(readStudy).isEqualToComparingFieldByFieldRecursively(sterileStudy);
   }
 
   @Test
   public void testFindAllStudies(){
     val studyIds = service.findAllStudies();
     assertThat(studyIds).contains(DEFAULT_STUDY_ID, "XYZ234");
-    val study = Study.create(
+    val study = SterileStudy.createSterileStudy(
         randomGenerator.generateRandomUUIDAsString(),
         randomGenerator.generateRandomUUIDAsString(),
         randomGenerator.generateRandomUUIDAsString(),
         randomGenerator.generateRandomUUIDAsString()
     );
 
-    service.saveStudy(study);
+    service.create(study);
     val studyIds2 = service.findAllStudies();
     assertThat(studyIds2).contains(DEFAULT_STUDY_ID, "XYZ234", study.getStudyId());
   }
@@ -93,7 +93,7 @@ public class StudyServiceTest {
     val existentStudyId = DEFAULT_STUDY_ID;
     assertThat(service.isStudyExist(existentStudyId)).isTrue();
     val study = service.read(existentStudyId);
-    assertSongError(() -> service.saveStudy(study), STUDY_ALREADY_EXISTS);
+    assertSongError(() -> service.create(study), STUDY_ALREADY_EXISTS);
   }
 
   @Test
