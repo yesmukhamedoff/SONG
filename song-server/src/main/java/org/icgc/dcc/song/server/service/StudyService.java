@@ -20,7 +20,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
-import org.icgc.dcc.song.server.model.entity.Study;
+import org.icgc.dcc.song.server.model.entity.composites.CompositeStudy;
 import org.icgc.dcc.song.server.repository.StudyRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -45,7 +45,7 @@ public class StudyService {
   StudyInfoService infoService;
 
   @SneakyThrows
-  public Study read(String studyId) {
+  public CompositeStudy read(String studyId) {
     val study = studyRepository.read(studyId);
     checkServer(!isNull(study), getClass(), STUDY_ID_DOES_NOT_EXIST,
         "The studyId '%s' does not exist", studyId);
@@ -59,7 +59,7 @@ public class StudyService {
     return !isNull(study);
   }
 
-  public int saveStudy(Study study) {
+  public int saveStudy(CompositeStudy study) {
     val id = study.getStudyId();
     checkServer(!isStudyExist(id), getClass(), STUDY_ALREADY_EXISTS,
         "The studyId '%s' already exists. Cannot save the study: %s " ,

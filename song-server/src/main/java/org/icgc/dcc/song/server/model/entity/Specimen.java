@@ -28,6 +28,7 @@ import lombok.val;
 import org.icgc.dcc.song.server.model.JsonAttributeNames;
 import org.icgc.dcc.song.server.model.Metadata;
 import org.icgc.dcc.song.server.model.ModelAttributeNames;
+import org.icgc.dcc.song.server.model.entity.composites.CompositeDonor;
 import org.icgc.dcc.song.server.model.enums.TableNames;
 import org.icgc.dcc.song.server.repository.TableAttributeNames;
 
@@ -63,7 +64,7 @@ public class Specimen extends Metadata {
   @JsonIgnore
   @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
   @JoinColumn(name = TableAttributeNames.DONOR_ID, nullable = false)
-  private Donor donor;
+  private CompositeDonor donor;
 
   @Column(name = TableAttributeNames.SUBMITTER_ID, nullable = false)
   private String specimenSubmitterId;
@@ -82,7 +83,7 @@ public class Specimen extends Metadata {
 
   @JsonGetter(value = JsonAttributeNames.DONOR_ID)
   public String getDonorId(){
-    return getDonor().getDonorId();
+    return this.getDonor().getDonorId();
   }
 
   public static Specimen createSpecimen(String id, String submitterId, String specimenClass, String type){
@@ -107,10 +108,10 @@ public class Specimen extends Metadata {
 //    return s;
 //  }
 
-  public void setDonor(@NonNull Donor donor){
-    this.donor = donor;
-    if (!donor.getSpecimens().contains(this)){
-      donor.addSpecimen(this);
+  public void setCompositeDonor(@NonNull CompositeDonor compositeDonor){
+    this.donor = compositeDonor;
+    if (!compositeDonor.getSpecimens().contains(this)){
+      compositeDonor.addSpecimen(this);
     }
   }
 

@@ -17,8 +17,8 @@
 package org.icgc.dcc.song.server.repository;
 
 import lombok.val;
-import org.icgc.dcc.song.server.model.entity.Donor;
-import org.icgc.dcc.song.server.model.entity.Study;
+import org.icgc.dcc.song.server.model.entity.composites.CompositeDonor;
+import org.icgc.dcc.song.server.model.entity.composites.CompositeStudy;
 import org.springframework.data.domain.Example;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -27,18 +27,18 @@ import java.util.List;
 import static com.google.common.base.Preconditions.checkState;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
-public interface DonorRepository extends JpaRepository<Donor, String> {
+public interface DonorRepository extends JpaRepository<CompositeDonor, String> {
 
-  default  int create( Donor donor){
+  default  int create( CompositeDonor donor){
     save(donor);
     return 1;
   }
 
-  default Donor read( String donorId){
+  default CompositeDonor read( String donorId){
     return findById(donorId).orElse(null);
   }
 
-  default int update( Donor donor){
+  default int update( CompositeDonor donor){
     save(donor);
     return 1;
   }
@@ -53,7 +53,7 @@ public interface DonorRepository extends JpaRepository<Donor, String> {
   default List<String> findByParentId( String parentId){
     val req = DonorRequest.create(null, parentId, null, null);
     return findAll(Example.of(req)).stream()
-        .map(Donor::getDonorId)
+        .map(CompositeDonor::getDonorId)
         .collect(toImmutableList());
   }
 
@@ -71,7 +71,7 @@ public interface DonorRepository extends JpaRepository<Donor, String> {
 
   // RTISMA_HACK  shouldnt have this class. This is just a temp fix before removeing the validation stuff out
   // of Donor entity
-  class DonorRequest extends  Donor {
+  class DonorRequest extends CompositeDonor {
     private String gender;
 
     @Override
@@ -87,7 +87,7 @@ public interface DonorRepository extends JpaRepository<Donor, String> {
       val d = new DonorRequest();
       d.setDonorGender(gender);
       d.setDonorId(id);
-      d.setStudy(Study.create(studyId, "", "", "")); //RTISMA_HACK
+      d.setStudy(CompositeStudy.create(studyId, "", "", "")); //RTISMA_HACK
       d.setDonorSubmitterId(submitterId);
       return d;
     }
