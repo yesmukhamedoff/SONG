@@ -51,7 +51,7 @@ import static com.google.common.collect.Lists.newArrayList;
 public class Sample extends AbstractSampleEntity {
 
   @JsonIgnore
-  @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+  @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   @JoinColumn(name = TableAttributeNames.SPECIMEN_ID, nullable = false)
   private Specimen specimen;
 

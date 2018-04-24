@@ -37,7 +37,11 @@ import static org.icgc.dcc.song.server.model.enums.AnalysisStates.UNPUBLISHED;
 @Entity
 @Table(name = TableNames.ANALYSIS)
 @Inheritance(strategy = InheritanceType.JOINED)
-@ToString(callSuper = true)
+@ToString(callSuper = true, exclude = {
+    ModelAttributeNames.STUDY,
+    ModelAttributeNames.FILES,
+    ModelAttributeNames.SAMPLES
+})
 @EqualsAndHashCode(callSuper = true)
 @Data
 @JsonInclude(JsonInclude.Include.ALWAYS)
@@ -58,7 +62,7 @@ public class BaseAnalysis extends Metadata implements Analysis {
   private String analysisId="";
 
   @JsonIgnore
-  @ManyToOne(cascade = CascadeType.ALL)
+  @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   @JoinColumn(name = TableAttributeNames.STUDY_ID, nullable = false)
   private Study study;
 

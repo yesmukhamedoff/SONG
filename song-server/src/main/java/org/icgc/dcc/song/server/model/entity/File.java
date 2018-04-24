@@ -27,6 +27,7 @@ import lombok.ToString;
 import lombok.val;
 import org.icgc.dcc.song.server.model.JsonAttributeNames;
 import org.icgc.dcc.song.server.model.Metadata;
+import org.icgc.dcc.song.server.model.ModelAttributeNames;
 import org.icgc.dcc.song.server.model.analysis.BaseAnalysis;
 import org.icgc.dcc.song.server.model.entity.study.Study;
 import org.icgc.dcc.song.server.model.enums.AccessTypes;
@@ -50,7 +51,10 @@ import static org.icgc.dcc.song.server.model.enums.AccessTypes.resolveAccessType
 @Table(name = TableNames.FILE)
 @EqualsAndHashCode(callSuper = true)
 @JsonInclude(JsonInclude.Include.NON_ABSENT)
-@ToString(callSuper = true)
+@ToString(callSuper = true, exclude = {
+    ModelAttributeNames.ANALYSIS,
+    ModelAttributeNames.STUDY
+})
 @Data
 public class File extends Metadata implements Serializable {
 
@@ -60,13 +64,13 @@ public class File extends Metadata implements Serializable {
 
   @JsonIgnore
   @ManyToOne(cascade = CascadeType.ALL,
-      fetch = FetchType.EAGER)
+      fetch = FetchType.LAZY)
   @JoinColumn(name = TableAttributeNames.ANALYSIS_ID, nullable = false)
   private BaseAnalysis analysis;
 
   @JsonIgnore
   @ManyToOne(cascade = CascadeType.ALL,
-      fetch = FetchType.EAGER)
+      fetch = FetchType.LAZY)
   @JoinColumn(name = TableAttributeNames.STUDY_ID, nullable = false)
   private Study study;
 

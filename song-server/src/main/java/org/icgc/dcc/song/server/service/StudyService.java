@@ -16,9 +16,11 @@
  */
 package org.icgc.dcc.song.server.service;
 
+import com.google.common.collect.Maps;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
+import org.icgc.dcc.song.server.model.ModelAttributeNames;
 import org.icgc.dcc.song.server.model.entity.study.AbstractStudyEntity;
 import org.icgc.dcc.song.server.model.entity.study.SterileStudy;
 import org.icgc.dcc.song.server.model.entity.study.Study;
@@ -28,7 +30,10 @@ import org.icgc.dcc.song.server.repository.StudyRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.EntityGraph;
+import javax.persistence.EntityManager;
 import java.util.List;
+import java.util.Map;
 
 import static java.lang.Thread.currentThread;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
@@ -45,15 +50,18 @@ public class StudyService {
   private final StudyRepository studyRepository;
   private final SterileStudyRepository sterileStudyRepository;
   private final StudyInfoService infoService;
+  private final EntityManager em;
 
   @Autowired
   public StudyService(
+      @NonNull EntityManager entityManager,
       @NonNull StudyRepository studyRepository,
       @NonNull SterileStudyRepository sterileStudyRepository,
       @NonNull StudyInfoService studyInfoService) {
     this.infoService = studyInfoService;
     this.sterileStudyRepository = sterileStudyRepository;
     this.studyRepository = studyRepository;
+    this.em = entityManager;
   }
 
   @SneakyThrows
@@ -65,6 +73,25 @@ public class StudyService {
     val studyResponse = studyResponseResult.get();
     studyResponse.setInfo(info);
     return studyResponse;
+  }
+
+  public static <T> Map<String, Object> createHint(EntityGraph<T> graph, boolean isFetch){
+    val hints = Maps.<String, Object>newHashMap();
+    if (isFetch){
+      hints.put("javax.persistence.fetchgraph", graph);
+    } else {
+      hints.put("javax.persistence.loadgraph", graph);
+    }
+    return hints;
+  }
+
+
+  public Study readWithSamples(@NonNull String studyId ){
+    val graph = em.createEntityGraph(Study.class);
+    graph.addSubgraph(ModelAttributeNames.DONORS)
+        .addSubgraph(ModelAttributeNames.SPECIMENS)
+        .addSubgraph(ModelAttributeNames.SAMPLES);
+    return em.find(Study.class, studyId, createHint(graph, true));
   }
 
   public boolean isStudyExist(@NonNull String studyId){

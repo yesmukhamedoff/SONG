@@ -73,7 +73,7 @@ public class Upload {
 
   @JsonIgnore
   @ManyToOne(cascade = CascadeType.ALL,
-      fetch = FetchType.EAGER)
+      fetch = FetchType.LAZY)
   @JoinColumn(name = TableAttributeNames.STUDY_ID, nullable = false)
   private Study study;
 

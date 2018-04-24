@@ -48,7 +48,7 @@ import static com.google.common.collect.Lists.newArrayList;
 @Table(name = TableNames.DONOR)
 @Data
 @EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true, exclude = {ModelAttributeNames.STUDY})
+@ToString(callSuper = true, exclude = { ModelAttributeNames.STUDY, ModelAttributeNames.SPECIMENS })
 @JsonPropertyOrder({
     ModelAttributeNames.DONOR_ID,
     ModelAttributeNames.DONOR_SUBMITTER_ID,
@@ -66,7 +66,7 @@ public class Donor extends AbstractDonorEntity {
 
   @JsonIgnore
   @ManyToOne(cascade = CascadeType.ALL,
-      fetch = FetchType.EAGER)
+      fetch = FetchType.LAZY)
   @JoinColumn(name = TableAttributeNames.STUDY_ID, nullable = false)
   private Study study;
 

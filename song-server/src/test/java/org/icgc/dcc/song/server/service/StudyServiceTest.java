@@ -16,16 +16,21 @@
  */
 package org.icgc.dcc.song.server.service;
 
+import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.dcc.song.core.utils.RandomGenerator;
 import org.icgc.dcc.song.server.model.entity.study.SterileStudy;
+import org.icgc.dcc.song.server.model.entity.study.Study;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Subgraph;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.STUDY_ALREADY_EXISTS;
@@ -108,6 +113,29 @@ public class StudyServiceTest {
     assertThat(service.isStudyExist(existentStudyId)).isTrue();
     val nonExistentStudyId = genStudyId();
     assertThat(service.isStudyExist(nonExistentStudyId)).isFalse();
+  }
+
+  @Autowired EntityManagerFactory entityManagerFactory;
+
+  @Test
+  public void testRob(){
+    val em = entityManagerFactory.createEntityManager();
+    val graph = em.createEntityGraph(Study.class);
+    Subgraph sub = graph.addSubgraph("donors");
+    sub = sub.addSubgraph("specimens");
+    sub = sub.addSubgraph("samples");
+
+
+    val props = Maps.<String, Object>newHashMap();
+    props.put("javax.persistence.fetchgraph", graph);
+    val s = em.find(Study.class, "ABC123", props);
+    em.close();
+    val a = s.getAnalyses();
+    val d = s.getDonors();
+    val f = s.getFiles();
+    val r = s.getUploads();
+    log.info("sdf");
+
   }
 
   private String genStudyId(){

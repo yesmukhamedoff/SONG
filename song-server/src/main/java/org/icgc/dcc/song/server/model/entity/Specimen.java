@@ -52,7 +52,7 @@ import static org.icgc.dcc.song.server.model.enums.Constants.validate;
 @Entity
 @Table(name = TableNames.SPECIMEN)
 @EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true, exclude = { ModelAttributeNames.DONOR })
+@ToString(callSuper = true, exclude = { ModelAttributeNames.DONOR, ModelAttributeNames.SAMPLES })
 @JsonInclude(JsonInclude.Include.NON_ABSENT)
 public class Specimen extends Metadata {
 
@@ -62,7 +62,7 @@ public class Specimen extends Metadata {
   private String specimenId;
 
   @JsonIgnore
-  @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+  @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   @JoinColumn(name = TableAttributeNames.DONOR_ID, nullable = false)
   private Donor donor;
 
