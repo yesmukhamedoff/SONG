@@ -71,6 +71,7 @@ auth:
 
 # RTISMA_HACK
 # logging.level.root: debug
+logging.level.org.hibernate.SQL: debug
 
 ---
 spring.profiles: async-test

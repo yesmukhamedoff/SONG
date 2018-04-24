@@ -20,8 +20,11 @@ import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.dcc.song.core.utils.RandomGenerator;
-import org.icgc.dcc.song.server.model.entity.study.SterileStudy;
-import org.icgc.dcc.song.server.model.entity.study.Study;
+import org.icgc.dcc.song.server.model.entity.study.StudyEntityMaps;
+import org.icgc.dcc.song.server.model.entity.study.impl.FullStudyEntity;
+import org.icgc.dcc.song.server.model.entity.study.impl.SterileStudyEntity;
+import org.icgc.dcc.song.server.repository.StudyRepo;
+import org.icgc.dcc.song.server.repository.StudyRepository;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,13 +34,14 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Subgraph;
+import java.util.HashMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.STUDY_ALREADY_EXISTS;
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.STUDY_ID_DOES_NOT_EXIST;
 import static org.icgc.dcc.song.core.testing.SongErrorAssertions.assertSongError;
 import static org.icgc.dcc.song.core.utils.RandomGenerator.createRandomGenerator;
-import static org.icgc.dcc.song.server.model.entity.study.SterileStudy.createSterileStudy;
+import static org.icgc.dcc.song.server.model.entity.study.impl.SterileStudyEntity.createSterileStudy;
 import static org.icgc.dcc.song.server.utils.TestConstants.DEFAULT_STUDY_ID;
 import static org.icgc.dcc.song.server.utils.TestFiles.getInfoName;
 
@@ -81,7 +85,7 @@ public class StudyServiceTest {
   public void testFindAllStudies(){
     val studyIds = service.findAllStudies();
     assertThat(studyIds).contains(DEFAULT_STUDY_ID, "XYZ234");
-    val study = SterileStudy.createSterileStudy(
+    val study = SterileStudyEntity.createSterileStudy(
         randomGenerator.generateRandomUUIDAsString(),
         randomGenerator.generateRandomUUIDAsString(),
         randomGenerator.generateRandomUUIDAsString(),
@@ -120,7 +124,7 @@ public class StudyServiceTest {
   @Test
   public void testRob(){
     val em = entityManagerFactory.createEntityManager();
-    val graph = em.createEntityGraph(Study.class);
+    val graph = em.createEntityGraph(FullStudyEntity.class);
     Subgraph sub = graph.addSubgraph("donors");
     sub = sub.addSubgraph("specimens");
     sub = sub.addSubgraph("samples");
@@ -128,7 +132,7 @@ public class StudyServiceTest {
 
     val props = Maps.<String, Object>newHashMap();
     props.put("javax.persistence.fetchgraph", graph);
-    val s = em.find(Study.class, "ABC123", props);
+    val s = em.find(FullStudyEntity.class, "ABC123", props);
     em.close();
     val a = s.getAnalyses();
     val d = s.getDonors();
@@ -136,6 +140,26 @@ public class StudyServiceTest {
     val r = s.getUploads();
     log.info("sdf");
 
+  }
+
+  @Test
+  public void testRob2() {
+    val em = entityManagerFactory.createEntityManager();
+    val graph = em.createEntityGraph(StudyEntityMaps.STUDY_WITH_SAMPLES_PATH);
+    val hints = new HashMap();
+    hints.put("javax.persistence.fetchgraph", graph);
+    val s = em.find(FullStudyEntity.class, DEFAULT_STUDY_ID, hints);
+    em.detach(s);
+    log.info("sdf");
+  }
+
+  @Autowired StudyRepository studyRepository;
+  @Autowired StudyRepo studyRepo;
+
+  @Test
+  public void testR(){
+    val result = studyRepo.readStudyWithSamples(DEFAULT_STUDY_ID, false);
+    log.info("sdf");
   }
 
   private String genStudyId(){

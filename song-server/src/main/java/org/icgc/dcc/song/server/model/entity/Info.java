@@ -9,7 +9,7 @@ import lombok.val;
 import org.hibernate.annotations.Type;
 import org.icgc.dcc.song.core.utils.JsonUtils;
 import org.icgc.dcc.song.server.model.enums.TableNames;
-import org.icgc.dcc.song.server.repository.TableAttributeNames;
+import org.icgc.dcc.song.server.model.enums.TableAttributeNames;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;

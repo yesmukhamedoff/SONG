@@ -24,13 +24,13 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.val;
-import org.icgc.dcc.song.server.model.JsonAttributeNames;
+import org.icgc.dcc.song.server.model.enums.JsonAttributeNames;
 import org.icgc.dcc.song.server.model.Metadata;
-import org.icgc.dcc.song.server.model.ModelAttributeNames;
+import org.icgc.dcc.song.server.model.enums.ModelAttributeNames;
 import org.icgc.dcc.song.server.model.entity.donor.Donor;
 import org.icgc.dcc.song.server.model.entity.sample.Sample;
 import org.icgc.dcc.song.server.model.enums.TableNames;
-import org.icgc.dcc.song.server.repository.TableAttributeNames;
+import org.icgc.dcc.song.server.model.enums.TableAttributeNames;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -39,6 +39,8 @@ import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedAttributeNode;
+import javax.persistence.NamedEntityGraph;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import java.util.List;
@@ -54,6 +56,8 @@ import static org.icgc.dcc.song.server.model.enums.Constants.validate;
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true, exclude = { ModelAttributeNames.DONOR, ModelAttributeNames.SAMPLES })
 @JsonInclude(JsonInclude.Include.NON_ABSENT)
+@NamedEntityGraph(name = "specimenWithSamples",
+    attributeNodes = @NamedAttributeNode(value = ModelAttributeNames.SAMPLES) )
 public class Specimen extends Metadata {
 
   @Id

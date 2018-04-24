@@ -4,7 +4,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.icgc.dcc.song.server.model.enums.TableNames;
-import org.icgc.dcc.song.server.repository.TableAttributeNames;
+import org.icgc.dcc.song.server.model.enums.TableAttributeNames;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;

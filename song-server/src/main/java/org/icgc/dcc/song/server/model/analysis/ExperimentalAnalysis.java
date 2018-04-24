@@ -5,9 +5,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.Value;
-import org.icgc.dcc.song.server.model.JsonAttributeNames;
+import org.icgc.dcc.song.server.model.enums.JsonAttributeNames;
 import org.icgc.dcc.song.server.model.Metadata;
-import org.icgc.dcc.song.server.model.ModelAttributeNames;
+import org.icgc.dcc.song.server.model.enums.ModelAttributeNames;
 import org.icgc.dcc.song.server.model.experiment.Experiment;
 
 @Value

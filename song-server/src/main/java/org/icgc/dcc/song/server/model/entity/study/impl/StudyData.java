@@ -1,11 +1,12 @@
-package org.icgc.dcc.song.server.model.entity.study;
+package org.icgc.dcc.song.server.model.entity.study.impl;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.val;
 import org.icgc.dcc.song.server.model.Metadata;
-import org.icgc.dcc.song.server.repository.TableAttributeNames;
+import org.icgc.dcc.song.server.model.entity.study.Study;
+import org.icgc.dcc.song.server.model.enums.TableAttributeNames;
 
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
@@ -14,7 +15,7 @@ import javax.persistence.MappedSuperclass;
 @MappedSuperclass
 @EqualsAndHashCode(callSuper=true)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class StudyRequest extends Metadata {
+public class StudyData extends Metadata implements Study {
 
   @Column(name = TableAttributeNames.NAME, nullable = false)
   private String name;
@@ -25,12 +26,18 @@ public class StudyRequest extends Metadata {
   @Column(name = TableAttributeNames.DESCRIPTION, nullable = false)
   private String description;
 
-  public static StudyRequest createStudyRequest(String name, String organization, String description) {
-    val s = new StudyRequest();
+  public static StudyData createStudyData(String name, String organization, String description) {
+    val s = new StudyData();
     s.setDescription(description);
     s.setName(name);
     s.setOrganization(organization);
     return s;
+  }
+
+  public void setWithStudy(Study study){
+    setDescription(study.getDescription());
+    setName(study.getName());
+    setOrganization(study.getOrganization());
   }
 
 }

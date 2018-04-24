@@ -24,12 +24,12 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.val;
-import org.icgc.dcc.song.server.model.JsonAttributeNames;
-import org.icgc.dcc.song.server.model.ModelAttributeNames;
+import org.icgc.dcc.song.server.model.enums.JsonAttributeNames;
+import org.icgc.dcc.song.server.model.enums.ModelAttributeNames;
 import org.icgc.dcc.song.server.model.analysis.BaseAnalysis;
 import org.icgc.dcc.song.server.model.entity.Specimen;
 import org.icgc.dcc.song.server.model.enums.TableNames;
-import org.icgc.dcc.song.server.repository.TableAttributeNames;
+import org.icgc.dcc.song.server.model.enums.TableAttributeNames;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;

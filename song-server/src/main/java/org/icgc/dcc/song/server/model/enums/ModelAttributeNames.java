@@ -1,4 +1,4 @@
-package org.icgc.dcc.song.server.model;
+package org.icgc.dcc.song.server.model.enums;
 
 import lombok.NoArgsConstructor;
 

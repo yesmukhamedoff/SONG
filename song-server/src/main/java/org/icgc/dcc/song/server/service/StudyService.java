@@ -20,11 +20,11 @@ import com.google.common.collect.Maps;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
-import org.icgc.dcc.song.server.model.ModelAttributeNames;
+import org.icgc.dcc.song.server.model.enums.ModelAttributeNames;
 import org.icgc.dcc.song.server.model.entity.study.AbstractStudyEntity;
-import org.icgc.dcc.song.server.model.entity.study.SterileStudy;
-import org.icgc.dcc.song.server.model.entity.study.Study;
-import org.icgc.dcc.song.server.model.entity.study.StudyRequest;
+import org.icgc.dcc.song.server.model.entity.study.impl.SterileStudyEntity;
+import org.icgc.dcc.song.server.model.entity.study.impl.FullStudyEntity;
+import org.icgc.dcc.song.server.model.entity.study.impl.StudyData;
 import org.icgc.dcc.song.server.repository.SterileStudyRepository;
 import org.icgc.dcc.song.server.repository.StudyRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +32,7 @@ import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityGraph;
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import java.util.List;
 import java.util.Map;
 
@@ -42,7 +43,7 @@ import static org.icgc.dcc.song.core.exceptions.ServerErrors.STUDY_ALREADY_EXIST
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.STUDY_ID_DOES_NOT_EXIST;
 import static org.icgc.dcc.song.core.exceptions.ServerException.buildServerException;
 import static org.icgc.dcc.song.core.exceptions.ServerException.checkServer;
-import static org.icgc.dcc.song.server.model.entity.study.SterileStudy.createSterileStudy;
+import static org.icgc.dcc.song.server.model.entity.study.impl.SterileStudyEntity.createSterileStudy;
 
 @Service
 public class StudyService {
@@ -51,10 +52,12 @@ public class StudyService {
   private final SterileStudyRepository sterileStudyRepository;
   private final StudyInfoService infoService;
   private final EntityManager em;
+  private final EntityManagerFactory entityManagerFactory;
 
   @Autowired
   public StudyService(
       @NonNull EntityManager entityManager,
+      @NonNull EntityManagerFactory entityManagerFactory,
       @NonNull StudyRepository studyRepository,
       @NonNull SterileStudyRepository sterileStudyRepository,
       @NonNull StudyInfoService studyInfoService) {
@@ -62,10 +65,11 @@ public class StudyService {
     this.sterileStudyRepository = sterileStudyRepository;
     this.studyRepository = studyRepository;
     this.em = entityManager;
+    this.entityManagerFactory = entityManagerFactory;
   }
 
   @SneakyThrows
-  public SterileStudy read(@NonNull String studyId) {
+  public SterileStudyEntity read(@NonNull String studyId) {
     val studyResponseResult = sterileStudyRepository.findById(studyId);
     checkServer(studyResponseResult.isPresent(), getClass(), STUDY_ID_DOES_NOT_EXIST,
         "The studyId '%s' does not exist", studyId);
@@ -86,12 +90,17 @@ public class StudyService {
   }
 
 
-  public Study readWithSamples(@NonNull String studyId ){
-    val graph = em.createEntityGraph(Study.class);
+  public FullStudyEntity readWithSamples(@NonNull String studyId ){
+    val em = entityManagerFactory.createEntityManager();
+    val graph = em.createEntityGraph(FullStudyEntity.class);
     graph.addSubgraph(ModelAttributeNames.DONORS)
         .addSubgraph(ModelAttributeNames.SPECIMENS)
         .addSubgraph(ModelAttributeNames.SAMPLES);
-    return em.find(Study.class, studyId, createHint(graph, true));
+    val lazyStudy = em.find(FullStudyEntity.class, studyId, createHint(graph, true));
+    em.close();
+    val study = new FullStudyEntity();
+    lazyStudy.getDonors().forEach(study::addDonor);
+    return study;
   }
 
   public boolean isStudyExist(@NonNull String studyId){
@@ -99,7 +108,7 @@ public class StudyService {
   }
 
   //TODO: rtisma need to test
-  public void create(@NonNull String id, @NonNull StudyRequest studyRequest) {
+  public void create(@NonNull String id, @NonNull StudyData studyRequest) {
     create(createSterileStudy(id, studyRequest));
   }
 
@@ -109,7 +118,7 @@ public class StudyService {
   }
 
   //TODO: rtisma need to test
-  public void update(@NonNull String id, @NonNull StudyRequest studyRequest) {
+  public void update(@NonNull String id, @NonNull StudyData studyRequest) {
     update(createSterileStudy(id, studyRequest));
   }
 
@@ -145,10 +154,10 @@ public class StudyService {
 
     //TODO: rtisma try to refactor this somehow when more mature
     // Save entity based on instance type. Not cleanest way of doing this
-    if (studyEntity instanceof SterileStudy){
-      sterileStudyRepository.save((SterileStudy)studyEntity);
-    } else if(studyEntity instanceof Study){
-      studyRepository.save((Study)studyEntity);
+    if (studyEntity instanceof SterileStudyEntity){
+      sterileStudyRepository.save((SterileStudyEntity)studyEntity);
+    } else if(studyEntity instanceof FullStudyEntity){
+      studyRepository.save((FullStudyEntity)studyEntity);
     } else {
       throw buildServerException(getClass(), ENTITY_NOT_IMPLEMENTED,
           "Unimplemented subclass of AbstractStudyEntity: %s",

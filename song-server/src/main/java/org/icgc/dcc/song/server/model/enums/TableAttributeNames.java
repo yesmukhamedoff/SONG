@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package org.icgc.dcc.song.server.repository;
+package org.icgc.dcc.song.server.model.enums;
 
 import lombok.NoArgsConstructor;
 

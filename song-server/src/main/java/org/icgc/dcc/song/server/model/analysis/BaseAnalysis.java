@@ -8,13 +8,13 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.icgc.dcc.song.server.model.Metadata;
-import org.icgc.dcc.song.server.model.ModelAttributeNames;
-import org.icgc.dcc.song.server.model.entity.study.Study;
+import org.icgc.dcc.song.server.model.enums.ModelAttributeNames;
+import org.icgc.dcc.song.server.model.entity.study.impl.FullStudyEntity;
 import org.icgc.dcc.song.server.model.entity.File;
 import org.icgc.dcc.song.server.model.entity.sample.Sample;
 import org.icgc.dcc.song.server.model.enums.Constants;
 import org.icgc.dcc.song.server.model.enums.TableNames;
-import org.icgc.dcc.song.server.repository.TableAttributeNames;
+import org.icgc.dcc.song.server.model.enums.TableAttributeNames;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -64,7 +64,7 @@ public class BaseAnalysis extends Metadata implements Analysis {
   @JsonIgnore
   @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   @JoinColumn(name = TableAttributeNames.STUDY_ID, nullable = false)
-  private Study study;
+  private FullStudyEntity study;
 
   @Column(name = TableAttributeNames.STATE)
   private String analysisState = UNPUBLISHED.name();

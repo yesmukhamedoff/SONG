@@ -22,7 +22,7 @@ import org.icgc.dcc.song.core.utils.RandomGenerator;
 import org.icgc.dcc.song.server.service.StudyService;
 
 import static lombok.AccessLevel.PRIVATE;
-import static org.icgc.dcc.song.server.model.entity.study.SterileStudy.createSterileStudy;
+import static org.icgc.dcc.song.server.model.entity.study.impl.SterileStudyEntity.createSterileStudy;
 
 @RequiredArgsConstructor(access = PRIVATE)
 public class StudyGenerator {
