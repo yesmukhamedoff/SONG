@@ -1,45 +1,32 @@
 package org.icgc.dcc.song.server.repository;
 
+import com.google.common.collect.Maps;
 import com.google.common.graph.Graph;
-import com.google.common.graph.GraphBuilder;
-import com.google.common.graph.ImmutableGraph;
 import com.google.common.graph.Traverser;
-import lombok.Builder;
-import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import lombok.Singular;
-import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.icgc.dcc.song.server.utils.graph.SimpleGraph;
+import org.icgc.dcc.song.server.utils.graph.SimpleNode;
+import org.icgc.dcc.song.server.utils.graph.SimpleNodePath;
 
-import javax.persistence.EntityGraph;
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import java.util.List;
+import javax.persistence.Subgraph;
+import java.util.Map;
+import java.util.Optional;
 
-import static org.icgc.dcc.song.server.repository.FetchPlanner.SimpleNode.node;
+import static com.google.common.base.Preconditions.checkArgument;
+import static org.icgc.dcc.song.server.utils.graph.SimpleNode.node;
 
 @Slf4j
 @RequiredArgsConstructor
-public class FetchPlanner<T> {
+public class FetchPlanner<T, ID> {
 
-  @NonNull private final Class<T> type;
-  @NonNull private final EntityManagerFactory entityManagerFactory;
-
-  @Getter
-  private final EntityGraph<T> graph;
-
-
-  @Value
-  public static class SimpleNode<T> {
-    @NonNull private final int id;
-    @NonNull private final T value;
-
-    public static <T> SimpleNode<T> node(int id, T value) {
-      return new SimpleNode<>(id, value);
-    }
-  }
+  @NonNull private final Class<T> entityClass;
+  @NonNull private final EntityManager entityManager;
+  @NonNull private final Graph<SimpleNode<String>> graph;
+  @NonNull private final SimpleNode<String> rootNode;
 
   public static void main(String[] args){
     val path1 = SimpleNodePath.<String>builder()
@@ -73,62 +60,58 @@ public class FetchPlanner<T> {
         .graphPath(specimenInfo)
         .build();
 
-
-    Traverser.forGraph(simpleStringGraph.mergePaths()).breadthFirst(node(0, "donors")).forEach(x -> log.info(x.getValue()));
-
+    val finalGraph = simpleStringGraph.mergePaths();
 
 
+
+    val root = node(0, "donors");
+    SimpleNode<String> prev = root;
+//    SimpleNode<String> curr = root;
+//    Traverser.forGraph(simpleStringGraph.mergePaths()).breadthFirst(node(0, "donors")).forEach(x -> log.info(x.getValue()));
+    for (val curr : Traverser.forGraph(simpleStringGraph.mergePaths()).breadthFirst(root)){
+      if (curr.equals(prev)){
+        continue;
+      }
+      if (finalGraph.hasEdgeConnecting(prev, curr)){
+
+      }
+
+
+    }
 
   }
 
-  public <T> void ttt(EntityManager entityManager, Class<T> tClass, Graph<SimpleNode<String>> graph){
+  public Optional<T> fetch(ID id){
+    val result = Optional.ofNullable(entityManager.find(entityClass, id,
+        buildFetchPlanHint(entityManager, entityClass, graph, rootNode)));
+    result.ifPresent(entityManager::detach);
+    return result;
+  }
+
+
+  public static <T> Map<String, Object> buildFetchPlanHint(EntityManager entityManager, Class<T> tClass, Graph<SimpleNode<String>> graph, SimpleNode<String> root){
+    checkArgument(graph.nodes().contains(root),
+        "The root node '%s' is not apart of the graph", root);
     val g = entityManager.createEntityGraph(tClass);
+    Subgraph<String> prevSubgraph = null;
+    Subgraph<String> currSubgraph = null;
 
-  }
-
-  @Value
-  @Builder
-  public static class SimpleNodePath<T> {
-
-    @NonNull
-    @Singular
-    private final List<T> nodes;
-
-    public Graph<T> buildGraph(){
-      val g = GraphBuilder.directed().<T>build();
-      for (int i = 0; i< nodes.size()-1; i++){
-        val curr = nodes.get(i);
-        val next = nodes.get(i+1);
-        g.putEdge(curr, next);
+    SimpleNode<String> prev = root;
+    for (val curr : Traverser.forGraph(graph).breadthFirst(root)){
+      if (curr.equals(prev)){
+        currSubgraph = g.addSubgraph(curr.getValue());
+        prevSubgraph = currSubgraph;
+        continue;
       }
-      return g;
-    }
-  }
-
-  @Value
-  @Builder
-  public static class SimpleGraph<T>{
-
-    @NonNull
-    @Singular
-    private final List<SimpleNodePath<T>> graphPaths;
-
-    public Graph<SimpleNode<T>> mergePaths(){
-      val g = GraphBuilder.directed().<SimpleNode<T>>build();
-      for(val path : graphPaths){
-        val nodes = path.getNodes();
-        for (int i=0; i<nodes.size()-1; i++){
-          val curr = node(i, nodes.get(i));
-          val next = node(i+1, nodes.get(i+1));
-          g.putEdge(curr, next);
-        }
+      if (!graph.hasEdgeConnecting(prev, curr)) {
+        prevSubgraph = currSubgraph;
       }
-      return ImmutableGraph.copyOf(g);
+      currSubgraph = prevSubgraph.addSubgraph(curr.getValue());
     }
 
+    val hints = Maps.<String,Object>newHashMap();
+    hints.put("javax.persistence.fetchgraph", g);
+    return hints;
   }
-
-
-
 
 }
