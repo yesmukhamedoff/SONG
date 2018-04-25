@@ -25,15 +25,15 @@ import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.ToString;
 import lombok.val;
-import org.icgc.dcc.song.server.model.enums.JsonAttributeNames;
 import org.icgc.dcc.song.server.model.Metadata;
-import org.icgc.dcc.song.server.model.enums.ModelAttributeNames;
 import org.icgc.dcc.song.server.model.analysis.BaseAnalysis;
 import org.icgc.dcc.song.server.model.entity.study.impl.FullStudyEntity;
 import org.icgc.dcc.song.server.model.enums.AccessTypes;
 import org.icgc.dcc.song.server.model.enums.Constants;
-import org.icgc.dcc.song.server.model.enums.TableNames;
+import org.icgc.dcc.song.server.model.enums.JsonAttributeNames;
+import org.icgc.dcc.song.server.model.enums.LombokAttributeNames;
 import org.icgc.dcc.song.server.model.enums.TableAttributeNames;
+import org.icgc.dcc.song.server.model.enums.TableNames;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -49,11 +49,14 @@ import static org.icgc.dcc.song.server.model.enums.AccessTypes.resolveAccessType
 
 @Entity
 @Table(name = TableNames.FILE)
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = true, exclude = {
+    LombokAttributeNames.analysis,
+    LombokAttributeNames.study
+})
 @JsonInclude(JsonInclude.Include.NON_ABSENT)
 @ToString(callSuper = true, exclude = {
-    ModelAttributeNames.ANALYSIS,
-    ModelAttributeNames.STUDY
+    LombokAttributeNames.analysis,
+    LombokAttributeNames.study
 })
 @Data
 public class File extends Metadata implements Serializable {

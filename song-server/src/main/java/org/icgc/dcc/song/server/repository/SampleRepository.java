@@ -18,8 +18,8 @@ package org.icgc.dcc.song.server.repository;
 
 import lombok.Getter;
 import lombok.val;
-import org.icgc.dcc.song.server.model.entity.sample.Sample;
-import org.icgc.dcc.song.server.model.entity.Specimen;
+import org.icgc.dcc.song.server.model.entity.sample.impl.FullSampleEntity;
+import org.icgc.dcc.song.server.model.entity.specimen.impl.FullSpecimenEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -27,20 +27,20 @@ import java.util.List;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.song.server.repository.SampleRepository.SpecimenRequest.createSpecimenRequest;
 
-public interface SampleRepository extends JpaRepository<Sample, String> {
+public interface SampleRepository extends JpaRepository<FullSampleEntity, String> {
 
-  default int create( Sample sample){
+  default int create( FullSampleEntity sample){
     save(sample);
     return 1;
 	}
 
-  default Sample read( String id){
+  default FullSampleEntity read( String id){
     return findById(id).orElse(null);
 	}
 
-  List<Sample> findAllBySpecimen(Specimen specimen);
+  List<FullSampleEntity> findAllBySpecimen(FullSpecimenEntity specimen);
 
-  class SpecimenRequest extends Specimen{
+  class SpecimenRequest extends FullSpecimenEntity {
 
     @Getter private String specimenClass;
     @Getter private String specimenType;
@@ -64,12 +64,12 @@ public interface SampleRepository extends JpaRepository<Sample, String> {
 
   }
 
-  default List<Sample> readByParentId( String specimenId){
+  default List<FullSampleEntity> readByParentId( String specimenId){
     val req = createSpecimenRequest(specimenId, null, null, null);
     return findAllBySpecimen(req);
 	}
 
-  default int update( Sample sample){
+  default int update( FullSampleEntity sample){
     val result = findById(sample.getSampleId());
     if(result.isPresent()){
       val readSample = result.get();
@@ -81,11 +81,11 @@ public interface SampleRepository extends JpaRepository<Sample, String> {
     return 0;
 	}
 
-  default int update( String id,  Sample sample){
+  default int update( String id,  FullSampleEntity sample){
     return update(sample);
 	}
 
-	int deleteAllBySpecimen(Specimen specimen);
+	int deleteAllBySpecimen(FullSpecimenEntity specimen);
 
   default int delete( String id){
     val result = findById(id);
@@ -107,7 +107,7 @@ public interface SampleRepository extends JpaRepository<Sample, String> {
 
 
   default List<String> findByParentId( String specimen_id){
-    return readByParentId(specimen_id).stream().map(Sample::getSampleId).collect(toImmutableList());
+    return readByParentId(specimen_id).stream().map(FullSampleEntity::getSampleId).collect(toImmutableList());
 	}
 
   default String findByBusinessKey( String studyId,  String submitterId){

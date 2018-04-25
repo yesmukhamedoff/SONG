@@ -22,14 +22,12 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.ToString;
-import lombok.val;
 import org.icgc.dcc.song.server.model.Upload;
 import org.icgc.dcc.song.server.model.analysis.BaseAnalysis;
 import org.icgc.dcc.song.server.model.entity.File;
-import org.icgc.dcc.song.server.model.entity.donor.Donor;
+import org.icgc.dcc.song.server.model.entity.donor.impl.FullDonorEntity;
 import org.icgc.dcc.song.server.model.entity.study.AbstractStudyEntity;
-import org.icgc.dcc.song.server.model.entity.study.Study;
-import org.icgc.dcc.song.server.model.entity.study.StudyEntity;
+import org.icgc.dcc.song.server.model.enums.LombokAttributeNames;
 import org.icgc.dcc.song.server.model.enums.ModelAttributeNames;
 import org.icgc.dcc.song.server.model.enums.TableNames;
 
@@ -41,44 +39,35 @@ import javax.persistence.NamedEntityGraph;
 import javax.persistence.NamedSubgraph;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import java.util.List;
+import java.util.Set;
 
-import static com.google.common.collect.Lists.newArrayList;
-import static org.icgc.dcc.song.server.model.entity.study.StudyEntityMaps.DONOR_WITH_SAMPLES_PATH;
-import static org.icgc.dcc.song.server.model.entity.study.StudyEntityMaps.SPECIMEN_WITH_SAMPLES_PATH;
-import static org.icgc.dcc.song.server.model.entity.study.StudyEntityMaps.STUDY_WITH_SAMPLES_PATH;
+import static com.google.common.collect.Sets.newHashSet;
 
 @Entity
 @Table(name = TableNames.STUDY)
 @Data
-@EqualsAndHashCode(callSuper=true)
+@EqualsAndHashCode(callSuper=true,
+    exclude = {
+        LombokAttributeNames.donors,
+        LombokAttributeNames.analyses,
+        LombokAttributeNames.uploads,
+        LombokAttributeNames.files }
+)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @ToString(callSuper = true, exclude = {
-    ModelAttributeNames.DONORS,
-    ModelAttributeNames.ANALYSES,
-    ModelAttributeNames.UPLOADS,
-    ModelAttributeNames.FILES})
-//@NamedEntityGraph(name = "studyWithSamples",
-//    attributeNodes =
-//        @NamedAttributeNode(value = ModelAttributeNames.DONORS, subgraph = "donorWithSamples"),
-//    subgraphs = {
-//        @NamedSubgraph(name = "donorWithSamples",
-//            attributeNodes =
-//              @NamedAttributeNode(value = ModelAttributeNames.SPECIMENS, subgraph = "specimenWithSamples")),
-//        @NamedSubgraph(name = "specimenWithSamples",
-//            attributeNodes =
-//            @NamedAttributeNode(value = ModelAttributeNames.SAMPLES))
-//    }
-//)
-//@StudyEntityMaps.LoadStudyWithSamples
-@NamedEntityGraph(name = STUDY_WITH_SAMPLES_PATH,
+    LombokAttributeNames.donors,
+    LombokAttributeNames.analyses,
+    LombokAttributeNames.uploads,
+    LombokAttributeNames.files
+})
+@NamedEntityGraph(name = "studyWithSamples",
     attributeNodes =
-    @NamedAttributeNode(value = ModelAttributeNames.DONORS, subgraph = DONOR_WITH_SAMPLES_PATH),
+        @NamedAttributeNode(value = ModelAttributeNames.DONORS, subgraph = "donorWithSamples"),
     subgraphs = {
-        @NamedSubgraph(name = DONOR_WITH_SAMPLES_PATH,
+        @NamedSubgraph(name = "donorWithSamples",
             attributeNodes =
-            @NamedAttributeNode(value = ModelAttributeNames.SPECIMENS, subgraph = SPECIMEN_WITH_SAMPLES_PATH)),
-        @NamedSubgraph(name = SPECIMEN_WITH_SAMPLES_PATH,
+              @NamedAttributeNode(value = ModelAttributeNames.SPECIMENS, subgraph = "specimenWithSamples")),
+        @NamedSubgraph(name = "specimenWithSamples",
             attributeNodes =
             @NamedAttributeNode(value = ModelAttributeNames.SAMPLES))
     }
@@ -89,45 +78,32 @@ public class FullStudyEntity extends AbstractStudyEntity {
   @OneToMany(cascade = CascadeType.ALL,
       fetch = FetchType.LAZY,
       mappedBy = ModelAttributeNames.STUDY)
-  private List<File> files = newArrayList();
+  private Set<File> files = newHashSet();
 
   @JsonIgnore
   @OneToMany(cascade = CascadeType.ALL,
       fetch = FetchType.LAZY,
       mappedBy = ModelAttributeNames.STUDY)
-  private List<BaseAnalysis> analyses = newArrayList();
+  private Set<BaseAnalysis> analyses = newHashSet();
 
   @JsonIgnore
   @OneToMany(cascade = CascadeType.ALL,
       fetch = FetchType.LAZY,
       mappedBy = ModelAttributeNames.STUDY)
-  private List<Upload> uploads = newArrayList();
+  private Set<Upload> uploads = newHashSet();
 
   @JsonIgnore
   @OneToMany(cascade = CascadeType.ALL,
       fetch = FetchType.LAZY,
       mappedBy = ModelAttributeNames.STUDY)
-  private List<Donor> donors = newArrayList();
+  private Set<FullDonorEntity> donors = newHashSet();
 
-  public FullStudyEntity addDonor(@NonNull Donor donor){
+  public FullStudyEntity addDonor(@NonNull FullDonorEntity donor){
     donors.add(donor);
     if (donor.getStudy() != this){
-      donor.setStudy(this);
+      donor.setParent(this);
     }
     return this;
-  }
-
-  public static FullStudyEntity createFullStudyEntity(@NonNull String studyId, @NonNull Study study) {
-    val s = new FullStudyEntity();
-    s.setWithStudy(study);
-    s.setStudyId(studyId);
-    return s;
-  }
-
-  public static FullStudyEntity createFullStudyEntity(@NonNull StudyEntity studyEntity) {
-    val s = new FullStudyEntity();
-    s.setWithStudyEntity(studyEntity);
-    return s;
   }
 
 }

@@ -267,7 +267,7 @@
         <logback.version>1.2.3</logback.version>
         <assertj.version>3.5.2</assertj.version>
         <assertj-guava.version>3.1.0</assertj-guava.version>
-        <lombok.version>1.16.14</lombok.version>
+        <lombok.version>1.16.20</lombok.version>
 
         <jackson.version>2.9.4</jackson.version>
         <networknt.version>0.1.5</networknt.version>

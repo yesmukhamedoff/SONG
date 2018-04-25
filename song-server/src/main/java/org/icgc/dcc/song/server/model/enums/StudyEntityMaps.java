@@ -1,4 +1,4 @@
-package org.icgc.dcc.song.server.model.entity.study;
+package org.icgc.dcc.song.server.model.enums;
 
 import lombok.NoArgsConstructor;
 import org.icgc.dcc.song.server.model.enums.ModelAttributeNames;

@@ -5,14 +5,20 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.Value;
-import org.icgc.dcc.song.server.model.enums.JsonAttributeNames;
 import org.icgc.dcc.song.server.model.Metadata;
-import org.icgc.dcc.song.server.model.enums.ModelAttributeNames;
+import org.icgc.dcc.song.server.model.enums.JsonAttributeNames;
+import org.icgc.dcc.song.server.model.enums.LombokAttributeNames;
 import org.icgc.dcc.song.server.model.experiment.Experiment;
 
 @Value
-@ToString(callSuper = true, exclude = { ModelAttributeNames.ANALYSIS, ModelAttributeNames.EXPERIMENT })
-@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true, exclude = {
+    LombokAttributeNames.analysis,
+    LombokAttributeNames.experiment
+})
+@EqualsAndHashCode(callSuper = true, exclude = {
+    LombokAttributeNames.analysis,
+    LombokAttributeNames.experiment
+})
 public class ExperimentalAnalysis<E extends Experiment> extends Metadata implements Analysis {
 
   @JsonIgnore

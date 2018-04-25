@@ -17,23 +17,23 @@
 package org.icgc.dcc.song.server.repository;
 
 import lombok.val;
-import org.icgc.dcc.song.server.model.entity.Specimen;
+import org.icgc.dcc.song.server.model.entity.specimen.impl.FullSpecimenEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface SpecimenRepository extends JpaRepository<Specimen, String> {
+public interface SpecimenRepository extends JpaRepository<FullSpecimenEntity, String> {
 
-  default int create( Specimen specimen){
+  default int create( FullSpecimenEntity specimen){
     save(specimen);
     return 1;
 	}
 
-  default Specimen read( String id){
+  default FullSpecimenEntity read( String id){
     return findById(id).orElse(null);
 	}
 
-  default int update( Specimen specimen){
+  default int update( FullSpecimenEntity specimen){
     val result = findById(specimen.getSpecimenId());
     if(result.isPresent()){
       val readSpecimen = result.get();
@@ -45,7 +45,7 @@ public interface SpecimenRepository extends JpaRepository<Specimen, String> {
     return 0;
 	}
 
-  default int update( String id,  Specimen specimen){
+  default int update( String id,  FullSpecimenEntity specimen){
     return update(specimen);
 	}
 

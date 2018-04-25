@@ -21,8 +21,7 @@ public class SterileStudyEntity extends AbstractStudyEntity {
 
   public static SterileStudyEntity createSterileStudy(@NonNull String id, @NonNull Study study){
     val s = new SterileStudyEntity();
-    s.setWithStudy(study);
-    s.setStudyId(id);
+    s.setWith(id, study);
     return s;
   }
 

@@ -3,7 +3,6 @@ package org.icgc.dcc.song.server.model.entity.study;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NonNull;
 import org.icgc.dcc.song.server.model.entity.study.impl.StudyData;
 import org.icgc.dcc.song.server.model.enums.TableAttributeNames;
 
@@ -22,8 +21,4 @@ public abstract class AbstractStudyEntity extends StudyData implements StudyEnti
       updatable = false, unique = true, nullable = false)
   private String studyId;
 
-  public void setWithStudyEntity(@NonNull StudyEntity studyEntity){
-    setWithStudy(studyEntity);
-    setStudyId(studyEntity.getStudyId());
-  }
 }

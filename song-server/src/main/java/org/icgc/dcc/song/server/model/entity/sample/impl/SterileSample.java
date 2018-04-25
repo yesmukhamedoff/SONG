@@ -1,12 +1,13 @@
-package org.icgc.dcc.song.server.model.entity.sample;
+package org.icgc.dcc.song.server.model.entity.sample.impl;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.val;
-import org.icgc.dcc.song.server.model.enums.TableNames;
+import org.icgc.dcc.song.server.model.entity.sample.AbstractSampleEntity;
 import org.icgc.dcc.song.server.model.enums.TableAttributeNames;
+import org.icgc.dcc.song.server.model.enums.TableNames;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -18,13 +19,13 @@ import javax.persistence.Table;
 @ToString(callSuper = true)
 @Data
 @JsonInclude(JsonInclude.Include.ALWAYS)
-public class SampleResponse extends AbstractSampleEntity {
+public class SterileSample extends AbstractSampleEntity {
 
   @Column(name = TableAttributeNames.SPECIMEN_ID, nullable = false)
   private String specimenId;
 
-  public static SampleResponse createSampleResponse(String id, String submitterId, String type, String specimenId){
-    val s = new SampleResponse();
+  public static SterileSample createSterileSample(String id, String submitterId, String type, String specimenId){
+    val s = new SterileSample();
     s.setSpecimenId(specimenId);
     s.setSampleId(id);
     s.setSampleType(type);

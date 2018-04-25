@@ -20,9 +20,10 @@ import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.dcc.song.core.utils.RandomGenerator;
-import org.icgc.dcc.song.server.model.entity.study.StudyEntityMaps;
 import org.icgc.dcc.song.server.model.entity.study.impl.FullStudyEntity;
 import org.icgc.dcc.song.server.model.entity.study.impl.SterileStudyEntity;
+import org.icgc.dcc.song.server.model.enums.StudyEntityMaps;
+import org.icgc.dcc.song.server.repository.FetchPlanner;
 import org.icgc.dcc.song.server.repository.StudyRepo;
 import org.icgc.dcc.song.server.repository.StudyRepository;
 import org.junit.Test;
@@ -146,7 +147,7 @@ public class StudyServiceTest {
   public void testRob2() {
     val em = entityManagerFactory.createEntityManager();
     val graph = em.createEntityGraph(StudyEntityMaps.STUDY_WITH_SAMPLES_PATH);
-    val hints = new HashMap();
+    val hints = new HashMap<String, Object>();
     hints.put("javax.persistence.fetchgraph", graph);
     val s = em.find(FullStudyEntity.class, DEFAULT_STUDY_ID, hints);
     em.detach(s);
@@ -155,10 +156,11 @@ public class StudyServiceTest {
 
   @Autowired StudyRepository studyRepository;
   @Autowired StudyRepo studyRepo;
+  @Autowired FetchPlanner<FullStudyEntity,String> studyWithDonorsFetchPlan;
 
   @Test
   public void testR(){
-    val result = studyRepo.readStudyWithSamples(DEFAULT_STUDY_ID, false);
+    val s = studyWithDonorsFetchPlan.fetch(DEFAULT_STUDY_ID);
     log.info("sdf");
   }
 

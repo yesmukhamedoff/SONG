@@ -34,10 +34,4 @@ public class StudyData extends Metadata implements Study {
     return s;
   }
 
-  public void setWithStudy(Study study){
-    setDescription(study.getDescription());
-    setName(study.getName());
-    setOrganization(study.getOrganization());
-  }
-
 }

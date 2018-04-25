@@ -8,13 +8,14 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.icgc.dcc.song.server.model.Metadata;
-import org.icgc.dcc.song.server.model.enums.ModelAttributeNames;
-import org.icgc.dcc.song.server.model.entity.study.impl.FullStudyEntity;
 import org.icgc.dcc.song.server.model.entity.File;
-import org.icgc.dcc.song.server.model.entity.sample.Sample;
+import org.icgc.dcc.song.server.model.entity.sample.impl.FullSampleEntity;
+import org.icgc.dcc.song.server.model.entity.study.impl.FullStudyEntity;
 import org.icgc.dcc.song.server.model.enums.Constants;
-import org.icgc.dcc.song.server.model.enums.TableNames;
+import org.icgc.dcc.song.server.model.enums.LombokAttributeNames;
+import org.icgc.dcc.song.server.model.enums.ModelAttributeNames;
 import org.icgc.dcc.song.server.model.enums.TableAttributeNames;
+import org.icgc.dcc.song.server.model.enums.TableNames;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -29,20 +30,24 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import java.util.List;
+import java.util.Set;
 
-import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Sets.newHashSet;
 import static org.icgc.dcc.song.server.model.enums.AnalysisStates.UNPUBLISHED;
 
 @Entity
 @Table(name = TableNames.ANALYSIS)
 @Inheritance(strategy = InheritanceType.JOINED)
 @ToString(callSuper = true, exclude = {
-    ModelAttributeNames.STUDY,
-    ModelAttributeNames.FILES,
-    ModelAttributeNames.SAMPLES
+    LombokAttributeNames.study,
+    LombokAttributeNames.files,
+    LombokAttributeNames.samples
 })
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = true, exclude = {
+    LombokAttributeNames.study,
+    LombokAttributeNames.files,
+    LombokAttributeNames.samples
+})
 @Data
 @JsonInclude(JsonInclude.Include.ALWAYS)
 @JsonTypeInfo(
@@ -75,14 +80,14 @@ public class BaseAnalysis extends Metadata implements Analysis {
   @OneToMany(cascade = CascadeType.ALL,
       fetch = FetchType.LAZY,
       mappedBy = ModelAttributeNames.ANALYSIS)
-  private List<File> files = newArrayList();
+  private Set<File> files = newHashSet();
 
   @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   @JoinTable(
       name = TableNames.SAMPLESET,
       joinColumns = @JoinColumn(name = TableAttributeNames.ANALYSIS_ID),
       inverseJoinColumns = @JoinColumn(name = TableAttributeNames.SAMPLE_ID))
-  private List<Sample> samples;
+  private Set<FullSampleEntity> samples = newHashSet();
 
   @Override
   public void setAnalysisState(String state) {

@@ -28,7 +28,7 @@ import static org.icgc.dcc.song.server.model.enums.Constants.validate;
     ModelAttributeNames.SPECIMENS,
     ModelAttributeNames.INFO })
 @JsonInclude(JsonInclude.Include.ALWAYS)
-public abstract class AbstractDonorEntity extends Metadata {
+public abstract class AbstractDonorEntity extends Metadata implements DonorEntity {
 
   @Id
   @Column(name = TableAttributeNames.ID, updatable = false, unique = true, nullable = false)
@@ -40,11 +40,9 @@ public abstract class AbstractDonorEntity extends Metadata {
   @Column(name = TableAttributeNames.GENDER, nullable = false)
   private String donorGender;
 
-  public void setDonorGender(String gender) {
+  @Override public void setDonorGender(String gender) {
     validate(DONOR_GENDER, gender);
     this.donorGender = gender;
   }
-
-  abstract public String getStudyId();
 
 }

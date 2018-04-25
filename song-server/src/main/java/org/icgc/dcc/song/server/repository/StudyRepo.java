@@ -9,7 +9,7 @@ import javax.persistence.EntityManager;
 import java.util.HashMap;
 import java.util.Optional;
 
-import static org.icgc.dcc.song.server.model.entity.study.StudyEntityMaps.STUDY_WITH_SAMPLES_PATH;
+import static org.icgc.dcc.song.server.model.enums.StudyEntityMaps.STUDY_WITH_SAMPLES_PATH;
 
 public class StudyRepo extends SimpleJpaRepository<FullStudyEntity, String> implements JpaRepository<FullStudyEntity, String>{
 

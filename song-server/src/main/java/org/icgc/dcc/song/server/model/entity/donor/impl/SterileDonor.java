@@ -1,8 +1,9 @@
-package org.icgc.dcc.song.server.model.entity.donor;
+package org.icgc.dcc.song.server.model.entity.donor.impl;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import org.icgc.dcc.song.server.model.entity.donor.AbstractDonorEntity;
 import org.icgc.dcc.song.server.model.enums.TableNames;
 import org.icgc.dcc.song.server.model.enums.TableAttributeNames;
 

@@ -16,25 +16,20 @@
  */
 package org.icgc.dcc.song.server.service;
 
-import com.google.common.collect.Maps;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
-import org.icgc.dcc.song.server.model.enums.ModelAttributeNames;
 import org.icgc.dcc.song.server.model.entity.study.AbstractStudyEntity;
-import org.icgc.dcc.song.server.model.entity.study.impl.SterileStudyEntity;
 import org.icgc.dcc.song.server.model.entity.study.impl.FullStudyEntity;
+import org.icgc.dcc.song.server.model.entity.study.impl.SterileStudyEntity;
 import org.icgc.dcc.song.server.model.entity.study.impl.StudyData;
+import org.icgc.dcc.song.server.repository.FetchPlanner;
 import org.icgc.dcc.song.server.repository.SterileStudyRepository;
 import org.icgc.dcc.song.server.repository.StudyRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.persistence.EntityGraph;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import java.util.List;
-import java.util.Map;
 
 import static java.lang.Thread.currentThread;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
@@ -51,21 +46,18 @@ public class StudyService {
   private final StudyRepository studyRepository;
   private final SterileStudyRepository sterileStudyRepository;
   private final StudyInfoService infoService;
-  private final EntityManager em;
-  private final EntityManagerFactory entityManagerFactory;
+  private final FetchPlanner<FullStudyEntity,String> studyWithDonorsFetchPlan;
 
   @Autowired
   public StudyService(
-      @NonNull EntityManager entityManager,
-      @NonNull EntityManagerFactory entityManagerFactory,
       @NonNull StudyRepository studyRepository,
       @NonNull SterileStudyRepository sterileStudyRepository,
-      @NonNull StudyInfoService studyInfoService) {
+      @NonNull StudyInfoService studyInfoService,
+    @NonNull FetchPlanner<FullStudyEntity,String> studyWithDonorsFetchPlan){
     this.infoService = studyInfoService;
     this.sterileStudyRepository = sterileStudyRepository;
     this.studyRepository = studyRepository;
-    this.em = entityManager;
-    this.entityManagerFactory = entityManagerFactory;
+    this.studyWithDonorsFetchPlan = studyWithDonorsFetchPlan;
   }
 
   @SneakyThrows
@@ -79,28 +71,12 @@ public class StudyService {
     return studyResponse;
   }
 
-  public static <T> Map<String, Object> createHint(EntityGraph<T> graph, boolean isFetch){
-    val hints = Maps.<String, Object>newHashMap();
-    if (isFetch){
-      hints.put("javax.persistence.fetchgraph", graph);
-    } else {
-      hints.put("javax.persistence.loadgraph", graph);
-    }
-    return hints;
-  }
 
-
+  //TODO: rtisma need to test
+  // Also need to transform this to the right Entity
   public FullStudyEntity readWithSamples(@NonNull String studyId ){
-    val em = entityManagerFactory.createEntityManager();
-    val graph = em.createEntityGraph(FullStudyEntity.class);
-    graph.addSubgraph(ModelAttributeNames.DONORS)
-        .addSubgraph(ModelAttributeNames.SPECIMENS)
-        .addSubgraph(ModelAttributeNames.SAMPLES);
-    val lazyStudy = em.find(FullStudyEntity.class, studyId, createHint(graph, true));
-    em.close();
-    val study = new FullStudyEntity();
-    lazyStudy.getDonors().forEach(study::addDonor);
-    return study;
+    checkStudyExist(studyId);
+    return studyWithDonorsFetchPlan.fetch(studyId).get();
   }
 
   public boolean isStudyExist(@NonNull String studyId){
