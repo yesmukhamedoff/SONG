@@ -63,7 +63,6 @@ public class FullSpecimenEntity extends AbstractSpecimenEntity {
   @JoinColumn(name = TableAttributeNames.DONOR_ID, nullable = false)
   private FullDonorEntity donor;
 
-  @JsonIgnore
   @OneToMany(cascade = CascadeType.ALL,
       fetch = FetchType.LAZY,
       mappedBy = ModelAttributeNames.SPECIMEN)

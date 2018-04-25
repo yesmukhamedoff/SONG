@@ -92,7 +92,6 @@ public class FullStudyEntity extends AbstractStudyEntity {
       mappedBy = ModelAttributeNames.STUDY)
   private Set<Upload> uploads = newHashSet();
 
-  @JsonIgnore
   @OneToMany(cascade = CascadeType.ALL,
       fetch = FetchType.LAZY,
       mappedBy = ModelAttributeNames.STUDY)
