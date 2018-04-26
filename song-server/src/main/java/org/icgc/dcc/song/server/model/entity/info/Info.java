@@ -8,12 +8,13 @@ import lombok.ToString;
 import lombok.val;
 import org.hibernate.annotations.Type;
 import org.icgc.dcc.song.core.utils.JsonUtils;
-import org.icgc.dcc.song.server.model.enums.TableNames;
 import org.icgc.dcc.song.server.model.enums.TableAttributeNames;
+import org.icgc.dcc.song.server.model.enums.TableNames;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.IdClass;
 import javax.persistence.Table;
 import java.util.Map;
 
@@ -25,13 +26,14 @@ import static org.icgc.dcc.song.server.repository.CustomJsonType.CUSTOM_JSON_TYP
 @Entity
 @Table(name = TableNames.INFO)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
+@IdClass(InfoPK.class)
 public class Info {
 
   @Id
   @Column(name = TableAttributeNames.ID, updatable = false, unique = true, nullable = false)
   private String id;
 
-
+  @Id
   @Column(name = TableAttributeNames.ID_TYPE, nullable = false)
   private String idType;
 

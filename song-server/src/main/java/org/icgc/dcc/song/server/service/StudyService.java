@@ -67,7 +67,7 @@ public class StudyService {
         "The studyId '%s' does not exist", studyId);
     val info = infoService.readNullableInfo(studyId);
     val studyResponse = studyResponseResult.get();
-    studyResponse.setInfo(info);
+//    studyResponse.setInfo(info);
     return studyResponse;
   }
 
@@ -142,9 +142,9 @@ public class StudyService {
 
     // Update or Create study info data
     if(isUpdate) {
-      infoService.update(id, studyEntity.getInfoAsString());
+     //TODO: rtisma HACKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK infoService.update(id, studyEntity.getInfoAsString());
     } else {
-      infoService.create(id, studyEntity.getInfoAsString());
+      // TODO: rtisma  HACKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK   infoService.create(id, studyEntity.getInfoAsString());
     }
   }
 

@@ -10,6 +10,8 @@ import lombok.val;
 
 import java.util.List;
 
+import static com.google.common.base.Preconditions.checkState;
+
 @Value
 @Builder
 public class SimpleNodePath<T> {
@@ -20,6 +22,8 @@ public class SimpleNodePath<T> {
 
   public Graph<T> buildGraph(){
     val g = GraphBuilder.directed().<T>build();
+    checkState(nodes.size()>0, "there should be atleast 1 node");
+
     for (int i = 0; i< nodes.size()-1; i++){
       val curr = nodes.get(i);
       val next = nodes.get(i+1);

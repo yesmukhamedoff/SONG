@@ -1,8 +1,9 @@
 package org.icgc.dcc.song.server.model.entity.study;
 
 import lombok.NonNull;
+import org.icgc.dcc.song.server.model.entity.info.Infoable;
 
-public interface StudyEntity extends Study {
+public interface StudyEntity extends Study, Infoable {
 
   String getStudyId();
 
@@ -15,6 +16,7 @@ public interface StudyEntity extends Study {
 
   default void setWithStudyEntity(@NonNull StudyEntity studyEntity){
     setWith(studyEntity.getStudyId(), studyEntity);
+    setInfo(studyEntity.getInfo());
   }
 
 }

@@ -2,9 +2,7 @@ package org.icgc.dcc.song.server.model.entity.study.impl;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.val;
-import org.icgc.dcc.song.server.model.Metadata;
 import org.icgc.dcc.song.server.model.entity.study.Study;
 import org.icgc.dcc.song.server.model.enums.TableAttributeNames;
 
@@ -13,9 +11,8 @@ import javax.persistence.MappedSuperclass;
 
 @Data
 @MappedSuperclass
-@EqualsAndHashCode(callSuper=true)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class StudyData extends Metadata implements Study {
+public class StudyData implements Study {
 
   @Column(name = TableAttributeNames.NAME, nullable = false)
   private String name;
@@ -26,6 +23,7 @@ public class StudyData extends Metadata implements Study {
   @Column(name = TableAttributeNames.DESCRIPTION, nullable = false)
   private String description;
 
+
   public static StudyData createStudyData(String name, String organization, String description) {
     val s = new StudyData();
     s.setDescription(description);
@@ -33,5 +31,7 @@ public class StudyData extends Metadata implements Study {
     s.setOrganization(organization);
     return s;
   }
+
+
 
 }
