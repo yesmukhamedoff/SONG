@@ -21,6 +21,7 @@ public class ModelAttributeNames {
   public static final String SAMPLES = "samples";
   public static final String SPECIMEN = "specimen";
   public static final String INFO = "info";
+  public static final String ID_TYPE = "idType";
   public static final String STUDY = "study";
   public static final String EXPERIMENT = "experiment";
 	public static final String ALIGNED					=	"aligned";

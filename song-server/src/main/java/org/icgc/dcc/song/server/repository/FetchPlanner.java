@@ -7,6 +7,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.hibernate.Session;
 import org.icgc.dcc.song.server.utils.graph.SimpleNode;
 
 import javax.persistence.EntityManager;
@@ -65,6 +66,7 @@ public class FetchPlanner<T, ID> {
     val result = Optional.ofNullable(entityManager.find(entityClass, id,
         buildFetchPlanHint(entityManager, entityClass, graph, rootNode)));
     result.ifPresent(entityManager::detach);
+    val session = entityManager.unwrap(Session.class);
     return result;
   }
 
