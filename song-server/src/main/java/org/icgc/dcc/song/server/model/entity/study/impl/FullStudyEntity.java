@@ -26,7 +26,6 @@ import org.icgc.dcc.song.server.model.Upload;
 import org.icgc.dcc.song.server.model.analysis.BaseAnalysis;
 import org.icgc.dcc.song.server.model.entity.File;
 import org.icgc.dcc.song.server.model.entity.donor.impl.FullDonorEntity;
-import org.icgc.dcc.song.server.model.entity.study.AbstractStudyEntity;
 import org.icgc.dcc.song.server.model.enums.LombokAttributeNames;
 import org.icgc.dcc.song.server.model.enums.ModelAttributeNames;
 import org.icgc.dcc.song.server.model.enums.TableNames;

@@ -21,7 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.dcc.song.core.utils.JsonUtils;
 import org.icgc.dcc.song.core.utils.RandomGenerator;
-import org.icgc.dcc.song.server.repository.StudyRepository;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -174,15 +173,6 @@ public class InfoServiceTest {
         .with(key, value)
         .end();
     return out.toString();
-  }
-
-  @Autowired StudyRepository studyRepository;
-
-  @Test
-  public void testRob(){
-    val s = studyRepository.findById("ABC123");
-    log.info("sdfsfd");
-
   }
 
 }

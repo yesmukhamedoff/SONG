@@ -1,33 +1,29 @@
-package org.icgc.dcc.song.server.model.entity.study;
+package org.icgc.dcc.song.server.model.entity.study.impl;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.FetchProfile;
 import org.hibernate.annotations.FetchProfiles;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
 import org.icgc.dcc.song.server.model.entity.donor.impl.FullDonorEntity;
-import org.icgc.dcc.song.server.model.entity.info.AbstractInfo.StudyInfo;
 import org.icgc.dcc.song.server.model.entity.sample.impl.FullSampleEntity;
 import org.icgc.dcc.song.server.model.entity.specimen.impl.FullSpecimenEntity;
-import org.icgc.dcc.song.server.model.entity.study.impl.FullStudyEntity;
-import org.icgc.dcc.song.server.model.entity.study.impl.StudyData;
+import org.icgc.dcc.song.server.model.entity.study.StudyEntity;
 import org.icgc.dcc.song.server.model.enums.ModelAttributeNames;
 import org.icgc.dcc.song.server.model.enums.TableAttributeNames;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
-import javax.persistence.FetchType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
 import javax.persistence.MappedSuperclass;
-import javax.persistence.OneToOne;
 
 @Data
 @MappedSuperclass
 @EqualsAndHashCode(callSuper=true)
+@ToString(callSuper =  true)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @FilterDef(name="myFilter",
     parameters={
@@ -57,10 +53,5 @@ public abstract class AbstractStudyEntity extends StudyData implements StudyEnti
   @Column(name = TableAttributeNames.ID,
       updatable = false, unique = true, nullable = false)
   private String studyId;
-
-  @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-  @JoinColumn(name = TableAttributeNames.ID)
-  private StudyInfo info;
-
 
 }

@@ -4,7 +4,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.icgc.dcc.song.server.model.entity.donor.impl.FullDonorEntity;
-import org.icgc.dcc.song.server.model.entity.study.AbstractStudyEntity;
 import org.icgc.dcc.song.server.model.enums.ModelAttributeNames;
 
 import java.util.List;

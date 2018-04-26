@@ -2,7 +2,7 @@ package org.icgc.dcc.song.server.model.entity.study;
 
 import lombok.NonNull;
 
-public interface Study  {
+public interface Study {
 
   String getName();
 

@@ -16,26 +16,17 @@
  */
 package org.icgc.dcc.song.server.service;
 
-import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.dcc.song.core.utils.RandomGenerator;
-import org.icgc.dcc.song.server.model.entity.study.impl.FullStudyEntity;
 import org.icgc.dcc.song.server.model.entity.study.impl.SterileStudyEntity;
-import org.icgc.dcc.song.server.model.enums.StudyEntityMaps;
-import org.icgc.dcc.song.server.repository.FetchPlanner;
-import org.icgc.dcc.song.server.repository.StudyRepo;
-import org.icgc.dcc.song.server.repository.StudyRepository;
+import org.icgc.dcc.song.server.utils.TestFiles;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Subgraph;
-import java.util.HashMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.STUDY_ALREADY_EXISTS;
@@ -44,6 +35,7 @@ import static org.icgc.dcc.song.core.testing.SongErrorAssertions.assertSongError
 import static org.icgc.dcc.song.core.utils.RandomGenerator.createRandomGenerator;
 import static org.icgc.dcc.song.server.model.entity.study.impl.SterileStudyEntity.createSterileStudy;
 import static org.icgc.dcc.song.server.utils.TestConstants.DEFAULT_STUDY_ID;
+import static org.icgc.dcc.song.server.utils.TestFiles.getInfoName;
 
 @Slf4j
 @SpringBootTest
@@ -65,7 +57,7 @@ public class StudyServiceTest {
     assertThat(study.getName()).isEqualTo("X1-CA");
     assertThat(study.getDescription()).isEqualTo("A fictional study");
     assertThat(study.getOrganization()).isEqualTo("Sample Data Research Institute");
-//TODO: rtisma HACKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK    assertThat(getInfoName(study)).isEqualTo("study1");
+    assertThat(getInfoName(study)).isEqualTo("study1");
   }
 
   @Test
@@ -75,6 +67,9 @@ public class StudyServiceTest {
     val name  = randomGenerator.generateRandomAsciiString(10);
     val description = randomGenerator.generateRandomUUID().toString();
     val sterileStudy = createSterileStudy(studyId, name, organization, description);
+    val infoKey = randomGenerator.generateRandomUUIDAsString();
+    val infoValue = randomGenerator.generateRandomUUIDAsString();
+    sterileStudy.setInfo(infoKey, infoValue);
     assertThat(service.isStudyExist(studyId)).isFalse();
     service.create(sterileStudy);
     val readStudy = service.read(studyId);
@@ -117,50 +112,6 @@ public class StudyServiceTest {
     assertThat(service.isStudyExist(existentStudyId)).isTrue();
     val nonExistentStudyId = genStudyId();
     assertThat(service.isStudyExist(nonExistentStudyId)).isFalse();
-  }
-
-  @Autowired EntityManagerFactory entityManagerFactory;
-
-  @Test
-  public void testRob(){
-    val em = entityManagerFactory.createEntityManager();
-    val graph = em.createEntityGraph(FullStudyEntity.class);
-    Subgraph sub = graph.addSubgraph("donors");
-    sub = sub.addSubgraph("specimens");
-    sub = sub.addSubgraph("samples");
-
-
-    val props = Maps.<String, Object>newHashMap();
-    props.put("javax.persistence.fetchgraph", graph);
-    val s = em.find(FullStudyEntity.class, "ABC123", props);
-    em.close();
-    val a = s.getAnalyses();
-    val d = s.getDonors();
-    val f = s.getFiles();
-    val r = s.getUploads();
-    log.info("sdf");
-
-  }
-
-  @Test
-  public void testRob2() {
-    val em = entityManagerFactory.createEntityManager();
-    val graph = em.createEntityGraph(StudyEntityMaps.STUDY_WITH_SAMPLES_PATH);
-    val hints = new HashMap<String, Object>();
-    hints.put("javax.persistence.fetchgraph", graph);
-    val s = em.find(FullStudyEntity.class, DEFAULT_STUDY_ID, hints);
-    em.detach(s);
-    log.info("sdf");
-  }
-
-  @Autowired StudyRepository studyRepository;
-  @Autowired StudyRepo studyRepo;
-  @Autowired FetchPlanner<FullStudyEntity,String> studyWithDonorsFetchPlan;
-
-  @Test
-  public void testR(){
-    val s = studyWithDonorsFetchPlan.fetch(DEFAULT_STUDY_ID);
-    log.info("sdf");
   }
 
   private String genStudyId(){

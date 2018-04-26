@@ -19,7 +19,7 @@ package org.icgc.dcc.song.server.service;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
-import org.icgc.dcc.song.server.model.entity.study.AbstractStudyEntity;
+import org.icgc.dcc.song.server.model.entity.study.impl.AbstractStudyEntity;
 import org.icgc.dcc.song.server.model.entity.study.impl.FullStudyEntity;
 import org.icgc.dcc.song.server.model.entity.study.impl.SterileStudyEntity;
 import org.icgc.dcc.song.server.model.entity.study.impl.StudyData;
@@ -67,7 +67,7 @@ public class StudyService {
         "The studyId '%s' does not exist", studyId);
     val info = infoService.readNullableInfo(studyId);
     val studyResponse = studyResponseResult.get();
-//    studyResponse.setInfo(info);
+    studyResponse.setInfo(info);
     return studyResponse;
   }
 
@@ -142,9 +142,9 @@ public class StudyService {
 
     // Update or Create study info data
     if(isUpdate) {
-     //TODO: rtisma HACKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK infoService.update(id, studyEntity.getInfoAsString());
+      infoService.update(id, studyEntity.getInfoAsString());
     } else {
-      // TODO: rtisma  HACKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK   infoService.create(id, studyEntity.getInfoAsString());
+      infoService.create(id, studyEntity.getInfoAsString());
     }
   }
 
