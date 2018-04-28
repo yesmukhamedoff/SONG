@@ -24,9 +24,11 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.ToString;
+import lombok.val;
 import org.icgc.dcc.song.server.model.entity.donor.impl.FullDonorEntity;
 import org.icgc.dcc.song.server.model.entity.sample.impl.FullSampleEntity;
 import org.icgc.dcc.song.server.model.entity.specimen.AbstractSpecimenEntity;
+import org.icgc.dcc.song.server.model.entity.specimen.Specimen;
 import org.icgc.dcc.song.server.model.enums.JsonAttributeNames;
 import org.icgc.dcc.song.server.model.enums.LombokAttributeNames;
 import org.icgc.dcc.song.server.model.enums.ModelAttributeNames;
@@ -38,6 +40,8 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedAttributeNode;
+import javax.persistence.NamedEntityGraph;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import java.util.Set;
@@ -56,10 +60,14 @@ import static com.google.common.collect.Sets.newHashSet;
     LombokAttributeNames.samples
 })
 @JsonInclude(JsonInclude.Include.NON_ABSENT)
+@NamedEntityGraph(name = FullSpecimenEntity.SPECIMEN_WITH_SAMPLES,
+    attributeNodes = @NamedAttributeNode(value = ModelAttributeNames.SAMPLES)
+)
 public class FullSpecimenEntity extends AbstractSpecimenEntity {
+  public static final String SPECIMEN_WITH_SAMPLES = "specimenWithSamples";
 
   @JsonIgnore
-  @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
   @JoinColumn(name = TableAttributeNames.DONOR_ID, nullable = false)
   private FullDonorEntity donor;
 
@@ -87,6 +95,15 @@ public class FullSpecimenEntity extends AbstractSpecimenEntity {
       sample.setParent(this);
     }
     return this;
+  }
+
+  public static FullSpecimenEntity createFullSpecimenEntity(@NonNull String id,
+      @NonNull FullDonorEntity donor, @NonNull Specimen specimen){
+    val s = new FullSpecimenEntity();
+    s.setWithSpecimen(specimen);
+    s.setSpecimenId(id);
+    s.setDonor(donor);
+    return s;
   }
 
 }

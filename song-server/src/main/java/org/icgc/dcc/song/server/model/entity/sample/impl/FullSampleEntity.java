@@ -24,8 +24,10 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.ToString;
+import lombok.val;
 import org.icgc.dcc.song.server.model.analysis.BaseAnalysis;
 import org.icgc.dcc.song.server.model.entity.sample.AbstractSampleEntity;
+import org.icgc.dcc.song.server.model.entity.sample.Sample;
 import org.icgc.dcc.song.server.model.entity.specimen.impl.FullSpecimenEntity;
 import org.icgc.dcc.song.server.model.enums.JsonAttributeNames;
 import org.icgc.dcc.song.server.model.enums.LombokAttributeNames;
@@ -59,7 +61,7 @@ import static com.google.common.collect.Sets.newHashSet;
 public class FullSampleEntity extends AbstractSampleEntity {
 
   @JsonIgnore
-  @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
   @JoinColumn(name = TableAttributeNames.SPECIMEN_ID, nullable = false)
   private FullSpecimenEntity specimen;
 
@@ -79,5 +81,14 @@ public class FullSampleEntity extends AbstractSampleEntity {
       specimen.addSample(this);
     }
   }
+
+  public static FullSampleEntity createFullSampleEntity(String id, FullSpecimenEntity specimenEntity, Sample sample){
+    val s  = new FullSampleEntity();
+    s.setWithSample(sample);
+    s.setSpecimen(specimenEntity);
+    s.setSampleId(id);
+    return s;
+  }
+
 
 }

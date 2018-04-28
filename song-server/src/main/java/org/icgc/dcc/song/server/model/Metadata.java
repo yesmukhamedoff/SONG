@@ -37,6 +37,8 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 @EqualsAndHashCode
 @ToString
 public class Metadata {
+  //TODO: rtisma change this to MetadataImpl, and create an interface for all entities to inherit. That way a Sample is a Metadata,
+  // and it can have an info field;
 
   private final Map<String, Object> info = new TreeMap<>();
 

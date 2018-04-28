@@ -46,6 +46,4 @@ public abstract class AbstractSpecimenEntity extends Metadata implements Specime
     specimenType = type;
   }
 
-
-
 }

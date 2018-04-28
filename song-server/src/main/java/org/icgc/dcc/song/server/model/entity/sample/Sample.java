@@ -13,8 +13,12 @@ public interface Sample {
   void setSampleType(String sampleType);
 
   default void setWithSample(@NonNull Sample sample){
-    setSampleSubmitterId(sample.getSampleSubmitterId());
-    setSampleType(sample.getSampleType());
+    setWith(sample.getSampleSubmitterId(), sample.getSampleType());
+  }
+
+  default void setWith(String sampleSubmitterId, String sampleType){
+    setSampleSubmitterId(sampleSubmitterId);
+    setSampleType(sampleType);
   }
 
 }

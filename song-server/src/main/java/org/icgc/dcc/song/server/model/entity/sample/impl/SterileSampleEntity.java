@@ -6,6 +6,7 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.val;
 import org.icgc.dcc.song.server.model.entity.sample.AbstractSampleEntity;
+import org.icgc.dcc.song.server.model.entity.sample.Sample;
 import org.icgc.dcc.song.server.model.enums.TableAttributeNames;
 import org.icgc.dcc.song.server.model.enums.TableNames;
 
@@ -19,18 +20,27 @@ import javax.persistence.Table;
 @ToString(callSuper = true)
 @Data
 @JsonInclude(JsonInclude.Include.ALWAYS)
-public class SterileSample extends AbstractSampleEntity {
+public class SterileSampleEntity extends AbstractSampleEntity {
 
   @Column(name = TableAttributeNames.SPECIMEN_ID, nullable = false)
   private String specimenId;
 
-  public static SterileSample createSterileSample(String id, String submitterId, String type, String specimenId){
-    val s = new SterileSample();
+  public static SterileSampleEntity createSterileSample(String id, String specimenId, Sample sample){
+    val s = new SterileSampleEntity();
+    s.setWithSample(sample);
     s.setSpecimenId(specimenId);
     s.setSampleId(id);
-    s.setSampleType(type);
-    s.setSampleSubmitterId(submitterId);
     return s;
   }
+
+  public static SterileSampleEntity createSterileSample(String id, String specimenId,
+      String sampleSubmitterId, String sampleType){
+    val s = new SterileSampleEntity();
+    s.setWith(sampleSubmitterId, sampleType);
+    s.setSpecimenId(specimenId);
+    s.setSampleId(id);
+    return s;
+  }
+
 
 }

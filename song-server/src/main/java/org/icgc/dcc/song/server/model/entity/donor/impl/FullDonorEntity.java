@@ -73,7 +73,7 @@ public class FullDonorEntity extends AbstractDonorEntity {
 
   @JsonIgnore
   @ManyToOne(cascade = CascadeType.ALL,
-      fetch = FetchType.LAZY)
+      fetch = FetchType.EAGER)
   @JoinColumn(name = TableAttributeNames.STUDY_ID, nullable = false)
   private FullStudyEntity study;
 
