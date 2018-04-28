@@ -47,7 +47,7 @@ import javax.persistence.MappedSuperclass;
         @FetchProfile.FetchOverride(entity = FullSampleEntity.class, association = ModelAttributeNames.INFO, mode = FetchMode.JOIN)
     })
 })
-public abstract class AbstractStudyEntity extends StudyData implements StudyEntity {
+public abstract class AbstractStudyEntity extends StudyImpl implements StudyEntity {
 
   @Id
   @Column(name = TableAttributeNames.ID,

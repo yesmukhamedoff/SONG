@@ -22,6 +22,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.ToString;
+import lombok.val;
 import org.icgc.dcc.song.server.model.Upload;
 import org.icgc.dcc.song.server.model.analysis.BaseAnalysis;
 import org.icgc.dcc.song.server.model.entity.File;
@@ -95,6 +96,16 @@ public class FullStudyEntity extends AbstractStudyEntity {
       fetch = FetchType.LAZY,
       mappedBy = ModelAttributeNames.STUDY)
   private Set<FullDonorEntity> donors = newHashSet();
+
+  public static FullStudyEntity buildStudyIdOnly(@NonNull FullStudyEntity studyEntity){
+    return buildStudyIdOnly(studyEntity.getStudyId());
+  }
+
+  public static FullStudyEntity buildStudyIdOnly(String studyId){
+    val s = new FullStudyEntity();
+    s.setStudyId(studyId);
+    return s;
+  }
 
   public FullStudyEntity addDonor(@NonNull FullDonorEntity donor){
     donors.add(donor);

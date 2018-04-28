@@ -22,10 +22,9 @@ import lombok.val;
 import org.icgc.dcc.song.server.model.entity.study.impl.AbstractStudyEntity;
 import org.icgc.dcc.song.server.model.entity.study.impl.FullStudyEntity;
 import org.icgc.dcc.song.server.model.entity.study.impl.SterileStudyEntity;
-import org.icgc.dcc.song.server.model.entity.study.impl.StudyData;
-import org.icgc.dcc.song.server.repository.FetchPlanner;
+import org.icgc.dcc.song.server.model.entity.study.impl.StudyImpl;
+import org.icgc.dcc.song.server.repository.FullStudyRepository;
 import org.icgc.dcc.song.server.repository.SterileStudyRepository;
-import org.icgc.dcc.song.server.repository.StudyRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -43,26 +42,23 @@ import static org.icgc.dcc.song.server.model.entity.study.impl.SterileStudyEntit
 @Service
 public class StudyService {
 
-  private final StudyRepository studyRepository;
-  private final SterileStudyRepository sterileStudyRepository;
+  private final FullStudyRepository fullRepository;
+  private final SterileStudyRepository sterileRepository;
   private final StudyInfoService infoService;
-  private final FetchPlanner<FullStudyEntity,String> studyWithDonorsFetchPlan;
 
   @Autowired
   public StudyService(
-      @NonNull StudyRepository studyRepository,
-      @NonNull SterileStudyRepository sterileStudyRepository,
-      @NonNull StudyInfoService studyInfoService,
-    @NonNull FetchPlanner<FullStudyEntity,String> studyWithDonorsFetchPlan){
+      @NonNull FullStudyRepository fullRepository,
+      @NonNull SterileStudyRepository sterileRepository,
+      @NonNull StudyInfoService studyInfoService){
     this.infoService = studyInfoService;
-    this.sterileStudyRepository = sterileStudyRepository;
-    this.studyRepository = studyRepository;
-    this.studyWithDonorsFetchPlan = studyWithDonorsFetchPlan;
+    this.sterileRepository = sterileRepository;
+    this.fullRepository = fullRepository;
   }
 
   @SneakyThrows
-  public SterileStudyEntity read(@NonNull String studyId) {
-    val studyResponseResult = sterileStudyRepository.findById(studyId);
+  public FullStudyEntity read(@NonNull String studyId) {
+    val studyResponseResult = fullRepository.findById(studyId);
     checkServer(studyResponseResult.isPresent(), getClass(), STUDY_ID_DOES_NOT_EXIST,
         "The studyId '%s' does not exist", studyId);
     val info = infoService.readNullableInfo(studyId);
@@ -71,20 +67,12 @@ public class StudyService {
     return studyResponse;
   }
 
-
-  //TODO: rtisma need to test
-  // Also need to transform this to the right Entity
-  public FullStudyEntity readWithSamples(@NonNull String studyId ){
-    checkStudyExist(studyId);
-    return studyWithDonorsFetchPlan.fetch(studyId).get();
-  }
-
   public boolean isStudyExist(@NonNull String studyId){
-    return sterileStudyRepository.existsById(studyId);
+    return fullRepository.existsById(studyId);
   }
 
   //TODO: rtisma need to test
-  public void create(@NonNull String id, @NonNull StudyData studyRequest) {
+  public void create(@NonNull String id, @NonNull StudyImpl studyRequest) {
     create(createSterileStudy(id, studyRequest));
   }
 
@@ -94,7 +82,7 @@ public class StudyService {
   }
 
   //TODO: rtisma need to test
-  public void update(@NonNull String id, @NonNull StudyData studyRequest) {
+  public void update(@NonNull String id, @NonNull StudyImpl studyRequest) {
     update(createSterileStudy(id, studyRequest));
   }
 
@@ -104,7 +92,7 @@ public class StudyService {
   }
 
   public List<String> findAllStudies() {
-    return sterileStudyRepository.findAll().stream()
+    return fullRepository.findAll().stream()
         .map(AbstractStudyEntity::getStudyId)
         .collect(toImmutableList());
   }
@@ -131,9 +119,9 @@ public class StudyService {
     //TODO: rtisma try to refactor this somehow when more mature
     // Save entity based on instance type. Not cleanest way of doing this
     if (studyEntity instanceof SterileStudyEntity){
-      sterileStudyRepository.save((SterileStudyEntity)studyEntity);
+      sterileRepository.save((SterileStudyEntity)studyEntity);
     } else if(studyEntity instanceof FullStudyEntity){
-      studyRepository.save((FullStudyEntity)studyEntity);
+      fullRepository.save((FullStudyEntity)studyEntity);
     } else {
       throw buildServerException(getClass(), ENTITY_NOT_IMPLEMENTED,
           "Unimplemented subclass of AbstractStudyEntity: %s",

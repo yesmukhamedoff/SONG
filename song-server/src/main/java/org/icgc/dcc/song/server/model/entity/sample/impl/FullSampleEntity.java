@@ -82,7 +82,9 @@ public class FullSampleEntity extends AbstractSampleEntity {
     }
   }
 
-  public static FullSampleEntity createFullSampleEntity(String id, FullSpecimenEntity specimenEntity, Sample sample){
+
+  public static FullSampleEntity createFullSampleEntity(String id, @NonNull FullSpecimenEntity specimenEntity,
+     @NonNull Sample sample){
     val s  = new FullSampleEntity();
     s.setWithSample(sample);
     s.setSpecimen(specimenEntity);
@@ -90,5 +92,10 @@ public class FullSampleEntity extends AbstractSampleEntity {
     return s;
   }
 
+  public static FullSampleEntity createFullSampleEntity(String id, @NonNull FullSpecimenEntity specimenEntity,
+      String sampleSubmitterId, String sampleType){
+    val sampleData = createSampleImpl(sampleSubmitterId, sampleType);
+    return createFullSampleEntity(id, specimenEntity, sampleData);
+  }
 
 }

@@ -24,18 +24,18 @@ public class SterileSpecimenEntity extends AbstractSpecimenEntity {
   @Column(name = TableAttributeNames.DONOR_ID, nullable = false)
   private String donorId;
 
-  public static SterileSpecimenEntity createSterileSpecimenEntity(@NonNull String id,
-      @NonNull String donorId, @NonNull Specimen specimen){
-    val s = createSterileSpecimenEntity(donorId, specimen);
-    s.setSpecimenId(id);
-    return s;
-  }
-
-  public static SterileSpecimenEntity createSterileSpecimenEntity(@NonNull String donorId, @NonNull Specimen specimen){
+  public static SterileSpecimenEntity createSterileSpecimenEntity(String id,
+      String donorId, @NonNull Specimen specimen){
     val s = new SterileSpecimenEntity();
     s.setWithSpecimen(specimen);
     s.setDonorId(donorId);
+    s.setSpecimenId(id);
     return s;
+  }
+  public static SterileSpecimenEntity createSterileSpecimenEntity(String id,
+      String donorId, String specimenSubmitterId, String specimenClass, String specimenType){
+    val specimenData = createSpecimenImpl(specimenSubmitterId, specimenClass, specimenType);
+    return createSterileSpecimenEntity(id, donorId, specimenData);
   }
 
 }

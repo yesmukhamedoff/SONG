@@ -26,10 +26,8 @@ import org.icgc.dcc.song.server.model.entity.specimen.impl.FullSpecimenEntity;
 import org.icgc.dcc.song.server.model.entity.specimen.impl.SterileSpecimenEntity;
 import org.icgc.dcc.song.server.model.entity.study.impl.AbstractStudyEntity;
 import org.icgc.dcc.song.server.repository.FullSpecimenRepository;
-import org.icgc.dcc.song.server.repository.SterileSpecimenRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -41,11 +39,12 @@ import static org.icgc.dcc.song.core.exceptions.ServerErrors.SPECIMEN_ALREADY_EX
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.SPECIMEN_DOES_NOT_EXIST;
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.SPECIMEN_ID_IS_CORRUPTED;
 import static org.icgc.dcc.song.core.exceptions.ServerException.checkServer;
-import static org.icgc.dcc.song.server.model.entity.specimen.impl.SterileSpecimenEntity.createSterileSpecimenEntity;
+import static org.icgc.dcc.song.server.model.entity.donor.impl.FullDonorEntity.buildDonorIdOnly;
+import static org.icgc.dcc.song.server.model.entity.specimen.impl.FullSpecimenEntity.createFullSpecimenEntity;
 
 @RequiredArgsConstructor
 @Service
-@Transactional
+//@Transactional
 public class SpecimenService {
 
   @Autowired
@@ -56,8 +55,6 @@ public class SpecimenService {
   private final SpecimenInfoService infoService;
   @Autowired
   private final FullSpecimenRepository fullRepository;
-  @Autowired
-  private final SterileSpecimenRepository sterileRepository;
   @Autowired
   private final StudyService studyService;
 
@@ -73,12 +70,23 @@ public class SpecimenService {
     return id;
   }
 
-  public String create(@NonNull String studyId, @NonNull FullSpecimenEntity specimenRequest) {
-    val id = createSpecimenId(studyId, specimenRequest);
-    val sterileSpecimen = createSterileSpecimenEntity(id, specimenRequest.getDonorId(), specimenRequest);
-    sterileRepository.save(sterileSpecimen);
-    infoService.create(id, specimenRequest.getInfoAsString());
-    specimenRequest.getSamples().forEach(x -> sampleService.create(studyId, x));
+  private FullSpecimenEntity buildCreateRequest(FullSpecimenEntity specimenEntity){
+    val orphanedDonor = buildDonorIdOnly(specimenEntity.getDonor());
+    val s = new FullSpecimenEntity();
+    s.setSpecimenId(specimenEntity.getSpecimenId());
+    s.setDonor(orphanedDonor);
+    s.setWithSpecimen(specimenEntity);
+    s.setInfo(specimenEntity.getInfo());
+    return s;
+  }
+
+  public String create(@NonNull String studyId, @NonNull FullSpecimenEntity specimenEntity) {
+    val id = createSpecimenId(studyId, specimenEntity);
+    specimenEntity.setSpecimenId(id);
+    val specimenCreateRequest = buildCreateRequest(specimenEntity);
+    fullRepository.save(specimenCreateRequest);
+    infoService.create(id, specimenEntity.getInfoAsString());
+    specimenEntity.getSamples().forEach(x -> sampleService.create(studyId, x));
     return id;
   }
 
@@ -91,31 +99,56 @@ public class SpecimenService {
     return specimen;
   }
 
+  FullSpecimenEntity populateSamples(@NonNull FullSpecimenEntity specimenEntity) {
+    sampleService.readByParent(specimenEntity).forEach(specimenEntity::addSample);
+    return specimenEntity;
+
+  }
 
   FullSpecimenEntity readWithSamples(String id) {
     val specimenEntity = read(id);
-    sampleService.readByParentId(id).forEach(specimenEntity::addSample);
-    return specimenEntity;
+    return populateSamples(specimenEntity);
   }
 
-  Set<FullSpecimenEntity> readByParentId(String parentId) {
-    val specimens = sterileRepository.findAllByDonorId(parentId);
+  Set<FullSpecimenEntity> readByParent(@NonNull FullDonorEntity donorEntity) {
+    val specimens = fullRepository.findAllByDonor(donorEntity);
     return specimens.stream()
-        .map(AbstractSpecimenEntity::getSpecimenId)
-        .map(this::readWithSamples)
+        .map(this::populateSamples)
         .collect(toImmutableSet());
   }
 
-  public void update(@NonNull SterileSpecimenEntity specimen) {
+  Set<FullSpecimenEntity> readByParentId(String parentId) {
+    val donorRequest = buildDonorIdOnly(parentId);
+    return readByParent(donorRequest);
+  }
+
+  //TODO: is sterile really that useful? It makes it clear that an update must not have any children,
+  // however could just use a FullSpecimenEntity and then in the update method check that no children are being set
+  public void update(@NonNull SterileSpecimenEntity specimenRequest) {
     //TODO: rtisma check that parent donor still exists
     //TODO: rtisma check that persisted donorId matches the requested donorId. If it doesnt, then its an illegal update since the relationship is being changed. Instead, the user should delete, and then recreate
-    checkSpecimenExist(specimen.getSpecimenId());
-    sterileRepository.save(specimen);
-    infoService.update(specimen.getSpecimenId(), specimen.getInfoAsString());
+    val specimen = read(specimenRequest.getSpecimenId());
+    specimen.setWithSpecimen(specimenRequest);
+    fullRepository.save(specimen);
+    infoService.update(specimen.getSpecimenId(), specimenRequest.getInfoAsString());
+  }
+
+  public FullSpecimenEntity convertToFull(@NonNull SterileSpecimenEntity specimenEntity){
+    val donorParent = new FullDonorEntity();
+    donorParent.setDonorId(specimenEntity.getDonorId());
+    val s = createFullSpecimenEntity(specimenEntity.getSpecimenId(), donorParent, specimenEntity);
+    s.setInfo(specimenEntity.getInfo());
+    return s;
   }
 
   public boolean isSpecimenExist(@NonNull String id){
-    return sterileRepository.existsById(id);
+    return fullRepository.existsById(id);
+  }
+
+  private FullSpecimenEntity specimenIdRequest(String id){
+    val s = new FullSpecimenEntity();
+    s.setSpecimenId(id);
+    return s;
   }
 
   public void checkSpecimenExist(String id){
@@ -135,7 +168,7 @@ public class SpecimenService {
 
   private void internalDelete(String id){
     sampleService.deleteByParentId(id); //TODO: rtisma confirm the delete is cascaded and that this isnt needed anymore
-    sterileRepository.deleteById(id);
+    fullRepository.deleteById(id);
     infoService.delete(id);
   }
 
@@ -145,7 +178,9 @@ public class SpecimenService {
 
   //TODO: rtisma should check that donorId exists?
   void deleteByParentId(@NonNull String parentId) {
-    sterileRepository.findAllByDonorId(parentId)
+    val donorRequest = new FullDonorEntity();
+    donorRequest.setDonorId(parentId);
+    fullRepository.findAllByDonor(donorRequest)
         .stream()
         .map(AbstractSpecimenEntity::getSpecimenId)
         .forEach(this::internalDelete);

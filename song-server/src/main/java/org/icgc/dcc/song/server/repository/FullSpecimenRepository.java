@@ -16,13 +16,16 @@
  */
 package org.icgc.dcc.song.server.repository;
 
+import org.icgc.dcc.song.server.model.entity.donor.impl.FullDonorEntity;
 import org.icgc.dcc.song.server.model.entity.specimen.impl.FullSpecimenEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Set;
 
 public interface FullSpecimenRepository extends JpaRepository<FullSpecimenEntity, String> {
 
   Set<FullSpecimenEntity> findAllBySpecimenSubmitterId(String specimenSubmitterId);
+  List<FullSpecimenEntity> findAllByDonor(FullDonorEntity donorEntity);
 
 }

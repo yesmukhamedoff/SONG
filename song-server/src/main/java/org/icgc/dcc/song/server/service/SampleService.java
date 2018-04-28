@@ -28,10 +28,8 @@ import org.icgc.dcc.song.server.model.entity.sample.impl.SterileSampleEntity;
 import org.icgc.dcc.song.server.model.entity.specimen.impl.FullSpecimenEntity;
 import org.icgc.dcc.song.server.model.entity.study.impl.AbstractStudyEntity;
 import org.icgc.dcc.song.server.repository.FullSampleRepository;
-import org.icgc.dcc.song.server.repository.SterileSampleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -42,19 +40,16 @@ import static org.icgc.dcc.song.core.exceptions.ServerErrors.SAMPLE_ALREADY_EXIS
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.SAMPLE_DOES_NOT_EXIST;
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.SAMPLE_ID_IS_CORRUPTED;
 import static org.icgc.dcc.song.core.exceptions.ServerException.checkServer;
-import static org.icgc.dcc.song.server.model.entity.sample.impl.SterileSampleEntity.createSterileSample;
+import static org.icgc.dcc.song.server.model.entity.specimen.impl.FullSpecimenEntity.buildSpecimenIdOnly;
 
 @Slf4j
 @RequiredArgsConstructor
 @Service
-@Transactional
+//@Transactional
 public class SampleService {
 
   @Autowired
   private final FullSampleRepository fullRepository;
-
-  @Autowired
-  private final SterileSampleRepository sterileRepository;
 
   @Autowired
   private final SampleInfoService infoService;
@@ -77,41 +72,48 @@ public class SampleService {
     return id;
   }
 
+  private FullSampleEntity buildCreateRequest(FullSampleEntity sampleEntity){
+    val orphanedDonor = buildSpecimenIdOnly(sampleEntity.getSpecimen());
+    val s = new FullSampleEntity();
+    s.setSampleId(sampleEntity.getSampleId());
+    s.setSpecimen(orphanedDonor);
+    s.setWithSample(sampleEntity);
+    s.setInfo(sampleEntity.getInfo());
+    return s;
+  }
+
   //TODO: [Related to SONG-260] should we add a specimenService.checkSpecimenExists(sample.getSpecimenId()) here?
-  public String create(@NonNull String studyId, @NonNull AbstractSampleEntity sampleRequest) {
+  public String create(@NonNull String studyId, @NonNull FullSampleEntity sampleEntity) {
     //TODO: rtisma check speciemn exists once SpecimenService is working
-    val id = createSampleId(studyId, sampleRequest);
+    val id = createSampleId(studyId, sampleEntity);
 
     //TODO: dont like this implicit modification,
     // but keeping it for backwards compatibility. Maybe should return the inputobject with the field filled
-    sampleRequest.setSampleId(id);
+    sampleEntity.setSampleId(id);
+    val sampleCreateRequest = buildCreateRequest(sampleEntity);
 
-    val sterileSample = createSterileSample(id, sampleRequest.getSpecimenId(), sampleRequest);
-    sterileRepository.save(sterileSample);
-    infoService.create(id, sampleRequest.getInfoAsString());
+    fullRepository.save(sampleCreateRequest);
+    infoService.create(id, sampleEntity.getInfoAsString());
     return id;
   }
 
-  public SterileSampleEntity read(@NonNull String id) {
-    val sampleResult = sterileRepository.findById(id);
-    checkServer(sampleResult.isPresent(), getClass(), SAMPLE_DOES_NOT_EXIST,
-        "The sample for sampleId '%s' could not be read because it does not exist", id);
-    val sample = sampleResult.get();
-    sample.setInfo(infoService.readNullableInfo(id));
-    return sample;
+  public FullSampleEntity read(@NonNull String id) {
+    val sampleResult = fullRepository.findById(id);
+    return interpretResult(id, sampleResult);
   }
 
-  public void update(@NonNull SterileSampleEntity sample) {
+  public void update(@NonNull SterileSampleEntity sampleRequest) {
     //TODO: rtisma check that parent specimen still exists
     //TODO: rtisma check that persisted specimenId matches the requested speciemnId. If it doesnt, then its an illegal update since the relationship is being changed. Instead, the user should delete, and then recreate
-    checkSampleExists(sample.getSampleId());
-    sterileRepository.save(sample);
-    infoService.update(sample.getSampleId(), sample.getInfoAsString());
+    val sample  = read(sampleRequest.getSampleId());
+    sample.setWithSample(sampleRequest);
+    fullRepository.save(sample);
+    infoService.update(sample.getSampleId(), sampleRequest.getInfoAsString());
   }
 
   public void delete(@NonNull String id) {
     checkSampleExists(id);
-    sterileRepository.deleteById(id);
+    fullRepository.deleteById(id);
     infoService.delete(id);
   }
 
@@ -119,9 +121,14 @@ public class SampleService {
     ids.forEach(this::delete);
   }
 
-
   void deleteByParentId(@NonNull String parentId) {
-    sterileRepository.deleteAllBySpecimenId(parentId);
+    val specimenRequest = new FullSpecimenEntity();
+    specimenRequest.setSpecimenId(parentId);
+    deleteByParent(specimenRequest);
+  }
+
+  void deleteByParent(@NonNull FullSpecimenEntity specimenEntity ) {
+    fullRepository.deleteAllBySpecimen(specimenEntity);
   }
 
   public Optional<String> findByBusinessKey(@NonNull String studyId, @NonNull String submitterId) {
@@ -136,7 +143,7 @@ public class SampleService {
   }
 
   public boolean isSampleExist(@NonNull String id){
-    return sterileRepository.existsById(id);
+    return fullRepository.existsById(id);
   }
 
   public void checkSampleExists(@NonNull String id){
@@ -149,14 +156,24 @@ public class SampleService {
         "The sample with sampleId '%s' already exists", id);
   }
 
-  Set<FullSampleEntity> readByParentId(@NonNull String parentId) {
-    val specimenRequest = new FullSpecimenEntity();
-    specimenRequest.setSpecimenId(parentId);
-    val samples = fullRepository.findAllBySpecimen(specimenRequest);
+  Set<FullSampleEntity> readByParent(@NonNull FullSpecimenEntity specimenEntity) {
+    val samples = fullRepository.findAllBySpecimen(specimenEntity);
     samples.forEach(x -> x.setInfo(infoService.readNullableInfo(x.getSampleId())));
     return samples;
-//    samples.forEach(x -> x.setInfo(infoService.readNullableInfo(x.getSampleId())));
-//    return ImmutableSet.copyOf(samples);
   }
+
+  Set<FullSampleEntity> readByParentId(@NonNull String parentId) {
+    val specimenRequest = buildSpecimenIdOnly(parentId);
+    return readByParent(specimenRequest);
+  }
+
+  private <T extends AbstractSampleEntity> T interpretResult(String id , Optional<T> sampleResult) {
+    checkServer(sampleResult.isPresent(), getClass(), SAMPLE_DOES_NOT_EXIST,
+        "The sample for sampleId '%s' could not be read because it does not exist", id);
+    val sample = sampleResult.get();
+    sample.setInfo(infoService.readNullableInfo(id));
+    return sample;
+  }
+
 
 }

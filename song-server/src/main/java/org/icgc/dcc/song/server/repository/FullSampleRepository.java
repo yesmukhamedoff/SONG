@@ -29,5 +29,6 @@ public interface FullSampleRepository extends JpaRepository<FullSampleEntity, St
 
   Set<FullSampleEntity> findAllBySpecimen(FullSpecimenEntity specimenEntity);
   List<FullSampleEntity> findAllBySampleSubmitterId(String sampleSubmitterId);
+  void deleteAllBySpecimen(FullSpecimenEntity specimenEntity);
 
 }

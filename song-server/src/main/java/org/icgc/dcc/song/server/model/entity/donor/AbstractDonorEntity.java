@@ -5,16 +5,13 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
-import org.icgc.dcc.song.server.model.Metadata;
+import org.icgc.dcc.song.server.model.entity.donor.impl.DonorImpl;
 import org.icgc.dcc.song.server.model.enums.ModelAttributeNames;
 import org.icgc.dcc.song.server.model.enums.TableAttributeNames;
 
 import javax.persistence.Column;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
-
-import static org.icgc.dcc.song.server.model.enums.Constants.DONOR_GENDER;
-import static org.icgc.dcc.song.server.model.enums.Constants.validate;
 
 @MappedSuperclass
 @Data
@@ -28,21 +25,10 @@ import static org.icgc.dcc.song.server.model.enums.Constants.validate;
     ModelAttributeNames.SPECIMENS,
     ModelAttributeNames.INFO })
 @JsonInclude(JsonInclude.Include.ALWAYS)
-public abstract class AbstractDonorEntity extends Metadata implements DonorEntity {
+public abstract class AbstractDonorEntity extends DonorImpl implements DonorEntity {
 
   @Id
   @Column(name = TableAttributeNames.ID, updatable = false, unique = true, nullable = false)
   private String donorId;
-
-  @Column(name = TableAttributeNames.SUBMITTER_ID, nullable = false)
-  private String donorSubmitterId;
-
-  @Column(name = TableAttributeNames.GENDER, nullable = false)
-  private String donorGender;
-
-  @Override public void setDonorGender(String gender) {
-    validate(DONOR_GENDER, gender);
-    this.donorGender = gender;
-  }
 
 }

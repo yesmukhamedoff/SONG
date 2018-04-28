@@ -17,7 +17,7 @@ import javax.persistence.MappedSuperclass;
 @ToString(callSuper = true)
 @MappedSuperclass
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class StudyData extends Metadata implements Study {
+public class StudyImpl extends Metadata implements Study {
 
   @Column(name = TableAttributeNames.NAME, nullable = false)
   private String name;
@@ -28,8 +28,8 @@ public class StudyData extends Metadata implements Study {
   @Column(name = TableAttributeNames.DESCRIPTION, nullable = false)
   private String description;
 
-  public static StudyData createStudyData(String name, String organization, String description) {
-    val s = new StudyData();
+  public static StudyImpl createStudyImpl(String name, String organization, String description) {
+    val s = new StudyImpl();
     s.setDescription(description);
     s.setName(name);
     s.setOrganization(organization);

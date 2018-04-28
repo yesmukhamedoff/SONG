@@ -22,6 +22,7 @@ import lombok.val;
 import org.icgc.dcc.song.server.model.entity.donor.AbstractDonorEntity;
 import org.icgc.dcc.song.server.model.entity.donor.DonorEntity;
 import org.icgc.dcc.song.server.model.entity.donor.impl.FullDonorEntity;
+import org.icgc.dcc.song.server.model.entity.study.impl.FullStudyEntity;
 import org.icgc.dcc.song.server.repository.FullDonorRepository;
 import org.icgc.dcc.song.server.repository.SterileDonorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,10 +39,11 @@ import static org.icgc.dcc.song.core.exceptions.ServerErrors.DONOR_DOES_NOT_EXIS
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.DONOR_ID_IS_CORRUPTED;
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.DUPLICATE_DONOR_IDS;
 import static org.icgc.dcc.song.core.exceptions.ServerException.checkServer;
-import static org.icgc.dcc.song.server.model.entity.donor.impl.SterileDonorEntity.createSterileDonorEntity;
+import static org.icgc.dcc.song.server.model.entity.study.impl.FullStudyEntity.buildStudyIdOnly;
 
 @RequiredArgsConstructor
 @Service
+//@Transactional
 public class DonorService {
 
   @Autowired
@@ -69,10 +71,28 @@ public class DonorService {
     return id;
   }
 
+  /**
+   * This is neccessaary since hibernate does not like it when the entity being saved has no children, however its
+   * parent has children. In this case, when the create method is passed a donorEntity that is populated with children
+   * that have not yet been assigned an id, a new donorEntity must be created that has the same data however is
+   * without children. In addition, the parent should also been without children. All this manipulation is very dirty,
+   * and needs to be refactored.
+   */
+  private FullDonorEntity buildCreateRequest(FullDonorEntity donorEntity){
+    val orphanedStudy= buildStudyIdOnly(donorEntity.getStudy());
+    val d = new FullDonorEntity();
+    d.setDonorId(donorEntity.getDonorId());
+    d.setStudy(orphanedStudy);
+    d.setWithDonor(donorEntity);
+    d.setInfo(donorEntity.getInfo());
+    return d;
+  }
+
   public String create(@NonNull FullDonorEntity donorRequest) {
     val id = createDonorId(donorRequest);
-    val sterileDonor = createSterileDonorEntity(id, donorRequest.getStudyId(), donorRequest);
-    sterileRepository.save(sterileDonor);
+    donorRequest.setDonorId(id);
+    val donorCreateRequest =  buildCreateRequest(donorRequest);
+    fullRepository.save(donorCreateRequest);
     infoService.create(id, donorRequest.getInfoAsString());
     donorRequest.getSpecimens().forEach(x -> specimenService.create(donorRequest.getStudyId(), x));
     return id;
@@ -93,11 +113,23 @@ public class DonorService {
     return donor;
   }
 
-  public Set<FullDonorEntity> readByParentId(@NonNull String parentId) {
-    studyService.checkStudyExist(parentId);
-    return sterileRepository.findAllByStudyId(parentId).stream()
-        .map(x -> readWithSpecimens(x.getDonorId()))
+  public FullDonorEntity populateSpecimens(@NonNull FullDonorEntity donorEntity) {
+
+    donorEntity.setSpecimens(specimenService.readByParent(donorEntity));
+    return donorEntity;
+  }
+
+  public Set<FullDonorEntity> readByParent(@NonNull FullStudyEntity studyEntity) {
+    studyService.checkStudyExist(studyEntity.getStudyId());
+    return fullRepository.findAllByStudy(studyEntity) .stream()
+        .map(this::populateSpecimens)
         .collect(toImmutableSet());
+  }
+
+  public Set<FullDonorEntity> readByParentId(@NonNull String parentId) {
+    val studyRequest = new FullStudyEntity();
+    studyRequest.setStudyId(parentId);
+    return readByParent(studyRequest);
   }
 
   public boolean isDonorExist(@NonNull String id){

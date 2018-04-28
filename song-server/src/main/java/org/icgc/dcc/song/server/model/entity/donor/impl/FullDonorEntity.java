@@ -25,7 +25,9 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.ToString;
+import lombok.val;
 import org.icgc.dcc.song.server.model.entity.donor.AbstractDonorEntity;
+import org.icgc.dcc.song.server.model.entity.donor.Donor;
 import org.icgc.dcc.song.server.model.entity.specimen.impl.FullSpecimenEntity;
 import org.icgc.dcc.song.server.model.entity.study.impl.FullStudyEntity;
 import org.icgc.dcc.song.server.model.enums.JsonAttributeNames;
@@ -82,6 +84,15 @@ public class FullDonorEntity extends AbstractDonorEntity {
       mappedBy = ModelAttributeNames.DONOR)
   private Set<FullSpecimenEntity> specimens = newHashSet();
 
+  public static FullDonorEntity buildDonorIdOnly(@NonNull FullDonorEntity donorEntity){
+    return buildDonorIdOnly(donorEntity.getDonorId());
+  }
+
+  public static FullDonorEntity buildDonorIdOnly(String donorId){
+    val d = new FullDonorEntity();
+    d.setDonorId(donorId);
+    return d;
+  }
 
   public void setParent(@NonNull FullStudyEntity study){
     this.study = study;
@@ -97,5 +108,21 @@ public class FullDonorEntity extends AbstractDonorEntity {
     }
     return this;
   }
+
+  public static FullDonorEntity createFullDonorEntity(String id,
+      FullStudyEntity study, @NonNull Donor donor ){
+    val d = new FullDonorEntity();
+    d.setWithDonor(donor);
+    d.setDonorId(id);
+    d.setStudy(study);
+    return d;
+  }
+
+  public static FullDonorEntity createFullDonorEntity(String id,
+      FullStudyEntity study, String donorSubmitterId, String donorGender){
+    val donorData = createDonorImpl(donorSubmitterId, donorGender);
+    return createFullDonorEntity(id, study, donorData);
+  }
+
 
 }

@@ -25,7 +25,7 @@ public class SterileStudyEntity extends AbstractStudyEntity {
   }
 
   public static SterileStudyEntity createSterileStudy(String id, String name, String organization, String description){
-    return createSterileStudy(id, createStudyData(name, organization, description));
+    return createSterileStudy(id, createStudyImpl(name, organization, description));
   }
 
 }

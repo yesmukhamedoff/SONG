@@ -89,6 +89,16 @@ public class FullSpecimenEntity extends AbstractSpecimenEntity {
     }
   }
 
+  public static FullSpecimenEntity buildSpecimenIdOnly(@NonNull FullSpecimenEntity specimenEntity){
+    return buildSpecimenIdOnly(specimenEntity.getSpecimenId());
+  }
+
+  public static FullSpecimenEntity buildSpecimenIdOnly(String specimenId){
+    val d = new FullSpecimenEntity();
+    d.setSpecimenId(specimenId);
+    return d;
+  }
+
   public FullSpecimenEntity addSample(@NonNull FullSampleEntity sample){
     this.samples.add(sample);
     if (sample.getSpecimen() != this){
@@ -97,13 +107,19 @@ public class FullSpecimenEntity extends AbstractSpecimenEntity {
     return this;
   }
 
-  public static FullSpecimenEntity createFullSpecimenEntity(@NonNull String id,
-      @NonNull FullDonorEntity donor, @NonNull Specimen specimen){
+  public static FullSpecimenEntity createFullSpecimenEntity(String id,
+      FullDonorEntity donor, @NonNull Specimen specimen){
     val s = new FullSpecimenEntity();
     s.setWithSpecimen(specimen);
     s.setSpecimenId(id);
     s.setDonor(donor);
     return s;
+  }
+
+  public static FullSpecimenEntity createFullSpecimenEntity(String id,
+      FullDonorEntity donor, String specimenSubmitterId, String specimenClass, String specimenType) {
+    val specimenData = createSpecimenImpl(specimenSubmitterId, specimenClass, specimenType);
+    return createFullSpecimenEntity(id, donor, specimenData);
   }
 
 }
