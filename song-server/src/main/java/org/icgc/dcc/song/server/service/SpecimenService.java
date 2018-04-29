@@ -23,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.val;
 import org.icgc.dcc.song.server.model.entity.donor.DonorEntity;
 import org.icgc.dcc.song.server.model.entity.specimen.CompositeSpecimenEntity;
+import org.icgc.dcc.song.server.model.entity.specimen.Specimen;
 import org.icgc.dcc.song.server.model.entity.specimen.SpecimenEntity;
 import org.icgc.dcc.song.server.repository.DonorRepository;
 import org.icgc.dcc.song.server.repository.SpecimenRepository;
@@ -40,6 +41,7 @@ import static org.icgc.dcc.song.core.exceptions.ServerErrors.SPECIMEN_ALREADY_EX
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.SPECIMEN_DOES_NOT_EXIST;
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.SPECIMEN_ID_IS_CORRUPTED;
 import static org.icgc.dcc.song.core.exceptions.ServerException.checkServer;
+import static org.icgc.dcc.song.server.model.entity.specimen.SpecimenEntity.createSpecimenEntity;
 
 @RequiredArgsConstructor
 @Service
@@ -91,7 +93,9 @@ public class SpecimenService {
         "The specimen for specimenId '%s' could not be read because it does not exist", id);
     val specimen = specimenResult.get();
     specimen.setInfo(infoService.readNullableInfo(id));
-    return specimen;
+    val nonProxy = new CompositeSpecimenEntity();
+    nonProxy.setWithSpecimenEntity(specimen);
+    return nonProxy;
   }
 
   CompositeSpecimenEntity readWithSamples(String id) {
@@ -102,14 +106,26 @@ public class SpecimenService {
 
   //TODO: rtisma there is no check for existence of a donorId...
   Set<CompositeSpecimenEntity> readByParentId(@NonNull String donorId) {
-    val specimens = fullRepository.findAllByDonorId(donorId);
+    val results = fullRepository.findAllByDonorId(donorId);
+    val specimensBuilder = ImmutableSet.<CompositeSpecimenEntity>builder();
+    for (val result : results){
+      val s = new CompositeSpecimenEntity();
+      s.setWithSpecimenEntity(result);
+      specimensBuilder.add(s);
+    }
+    val specimens = specimensBuilder.build();
     specimens.forEach(this::populateInplace);
-    return ImmutableSet.copyOf(specimens);
+    return specimens;
   }
 
   //TODO: is sterile really that useful? It makes it clear that an update must not have any children,
   // however could just use a FullSpecimenEntity and then in the update method check that no children are being set
-  public void update(@NonNull SpecimenEntity specimenRequest) {
+  public void update(@NonNull String specimenId, @NonNull Specimen specimenData) {
+    val specimenUpdateRequest = createSpecimenEntity(specimenId, null, specimenData);
+    update(specimenUpdateRequest);
+  }
+
+  private void update(@NonNull SpecimenEntity specimenRequest) {
     //TODO: rtisma check that parent donor still exists
     //TODO: rtisma check that persisted donorId matches the requested donorId. If it doesnt, then its an illegal update since the relationship is being changed. Instead, the user should delete, and then recreate
     val specimen = read(specimenRequest.getSpecimenId());

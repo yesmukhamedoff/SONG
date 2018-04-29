@@ -57,7 +57,9 @@ public class StudyService {
     val info = infoService.readNullableInfo(studyId);
     val studyResponse = studyResponseResult.get();
     studyResponse.setInfo(info);
-    return studyResponse;
+    val nonProxy = new CompositeStudyEntity();
+    nonProxy.setWithStudyEntity(studyResponse);
+    return nonProxy;
   }
 
   public boolean isStudyExist(@NonNull String studyId){

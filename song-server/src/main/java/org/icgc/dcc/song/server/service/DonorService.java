@@ -85,7 +85,9 @@ public class DonorService {
       "The donor for donorId '%s' could not be read because it does not exist", id);
     val donor = donorResult.get();
     donor.setInfo(infoService.readNullableInfo(id));
-    return donor;
+    val nonProxy = new CompositeDonorEntity();
+    nonProxy.setWithDonorEntity(donor);
+    return nonProxy;
   }
 
   public CompositeDonorEntity readWithSpecimens(@NonNull String id) {
@@ -96,9 +98,16 @@ public class DonorService {
 
   public Set<CompositeDonorEntity> readByParentId(@NonNull String studyId) {
     studyService.checkStudyExist(studyId);
-    val donors = fullRepository.findAllByStudyId(studyId);
+    val results = fullRepository.findAllByStudyId(studyId);
+    val donorsBuilder = ImmutableSet.<CompositeDonorEntity>builder();
+    for(val result: results){
+      val d = new CompositeDonorEntity();
+      d.setWithDonorEntity(result);
+      donorsBuilder.add(d);
+    }
+    val donors = donorsBuilder.build();
     donors.forEach(this::populateInplace);
-    return ImmutableSet.copyOf(donors);
+    return donors;
   }
 
   public boolean isDonorExist(@NonNull String id){

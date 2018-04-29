@@ -31,7 +31,7 @@ public class Study extends Metadata {
   public void setWithStudy(@NonNull Study study){
     setName(study.getName());
     setOrganization(study.getOrganization());
-    setDescription(study.getOrganization());
+    setDescription(study.getDescription());
     setInfo(study.getInfo());
   }
 

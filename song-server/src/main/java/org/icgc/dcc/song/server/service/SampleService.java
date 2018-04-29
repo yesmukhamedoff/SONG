@@ -16,6 +16,7 @@
  */
 package org.icgc.dcc.song.server.service;
 
+import com.google.common.collect.ImmutableSet;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -105,7 +106,13 @@ public class SampleService {
 
   public CompositeSampleEntity read(@NonNull String id) {
     val sampleResult = fullRepository.findById(id);
-    return interpretResult(id, sampleResult);
+    checkServer(sampleResult.isPresent(), getClass(), SAMPLE_DOES_NOT_EXIST,
+        "The sample for sampleId '%s' could not be read because it does not exist", id);
+    val sample = sampleResult.get();
+    sample.setInfo(infoService.readNullableInfo(id));
+    val nonProxy = new CompositeSampleEntity();
+    nonProxy.setWithSampleEntity(sample);
+    return nonProxy;
   }
 
   public void update(@NonNull String sampleId, @NonNull Sample sampleUpdate) {
@@ -175,18 +182,16 @@ public class SampleService {
   }
 
   Set<CompositeSampleEntity> readByParentId(@NonNull String specimenId) {
-    val samples = fullRepository.findAllBySpecimenId(specimenId);
+    val results = fullRepository.findAllBySpecimenId(specimenId);
+    val samplesBuilder = ImmutableSet.<CompositeSampleEntity>builder();
+    for (val result : results){
+      val s = new CompositeSampleEntity();
+      s.setWithSampleEntity(result);
+      samplesBuilder.add(s);
+    }
+    val samples = samplesBuilder.build();
     samples.forEach(x -> x.setInfo(infoService.readNullableInfo(x.getSampleId())));
     return samples;
   }
-
-  private <T extends SampleEntity> T interpretResult(String id , Optional<T> sampleResult) {
-    checkServer(sampleResult.isPresent(), getClass(), SAMPLE_DOES_NOT_EXIST,
-        "The sample for sampleId '%s' could not be read because it does not exist", id);
-    val sample = sampleResult.get();
-    sample.setInfo(infoService.readNullableInfo(id));
-    return sample;
-  }
-
 
 }
