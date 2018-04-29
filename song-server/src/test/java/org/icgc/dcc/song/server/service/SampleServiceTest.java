@@ -46,6 +46,7 @@ import static org.icgc.dcc.song.server.model.entity.sample.SampleEntity.createSa
 import static org.icgc.dcc.song.server.model.entity.specimen.CompositeSpecimenEntity.buildSpecimenCreateRequest;
 import static org.icgc.dcc.song.server.model.entity.specimen.Specimen.createSpecimen;
 import static org.icgc.dcc.song.server.model.enums.Constants.SAMPLE_TYPE;
+import static org.icgc.dcc.song.server.model.enums.Constants.SPECIMEN_CLASS;
 import static org.icgc.dcc.song.server.model.enums.Constants.SPECIMEN_TYPE;
 import static org.icgc.dcc.song.server.utils.TestConstants.DEFAULT_DONOR_ID;
 import static org.icgc.dcc.song.server.utils.TestConstants.DEFAULT_SAMPLE_ID;
@@ -98,6 +99,7 @@ public class SampleServiceTest {
 
     val s = new CompositeSampleEntity();
     s.setWithSample(sampleData);
+    s.setSpecimenId(specimenId);
 
     val status = sampleService.create(DEFAULT_STUDY_ID, s);
     val id = s.getSampleId();
@@ -206,7 +208,7 @@ public class SampleServiceTest {
     val specimenCreateRequest = buildSpecimenCreateRequest(donorId,
         createSpecimen(
             randomGenerator.generateRandomUUIDAsString(),
-            randomGenerator.randomElement(newArrayList(SPECIMEN_TYPE)),
+            randomGenerator.randomElement(newArrayList(SPECIMEN_CLASS)),
             randomGenerator.randomElement(newArrayList(SPECIMEN_TYPE))
         ));
 
@@ -217,10 +219,10 @@ public class SampleServiceTest {
     val numSamples = 5;
     val expectedSampleIds = Sets.<String>newHashSet();
     for (int i =0; i< numSamples; i++){
-      val sampleCreateRequest = buildSampleCreateRequest(specimenId,
-          createSample(
-              randomGenerator.randomElement(newArrayList(SAMPLE_TYPE)),
-              randomGenerator.generateRandomUUIDAsString()));
+      val sampleCreateRequest = new CompositeSampleEntity();
+      sampleCreateRequest.setSpecimenId(specimenId);
+      sampleCreateRequest.setSampleSubmitterId(randomGenerator.generateRandomUUIDAsString());
+      sampleCreateRequest.setSampleType(randomGenerator.randomElement(newArrayList(SAMPLE_TYPE)));
 
       val sampleId = sampleService.create(studyId, sampleCreateRequest);
       expectedSampleIds.add(sampleId);
