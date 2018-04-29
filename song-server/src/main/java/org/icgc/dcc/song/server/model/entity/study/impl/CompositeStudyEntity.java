@@ -22,18 +22,19 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.ToString;
-import lombok.val;
 import org.icgc.dcc.song.server.model.Upload;
 import org.icgc.dcc.song.server.model.analysis.BaseAnalysis;
 import org.icgc.dcc.song.server.model.entity.File;
-import org.icgc.dcc.song.server.model.entity.donor.impl.FullDonorEntity;
+import org.icgc.dcc.song.server.model.entity.donor.CompositeDonorEntity;
 import org.icgc.dcc.song.server.model.enums.LombokAttributeNames;
 import org.icgc.dcc.song.server.model.enums.ModelAttributeNames;
+import org.icgc.dcc.song.server.model.enums.TableAttributeNames;
 import org.icgc.dcc.song.server.model.enums.TableNames;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
 import javax.persistence.NamedAttributeNode;
 import javax.persistence.NamedEntityGraph;
 import javax.persistence.NamedSubgraph;
@@ -72,46 +73,33 @@ import static com.google.common.collect.Sets.newHashSet;
             @NamedAttributeNode(value = ModelAttributeNames.SAMPLES))
     }
 )
-public class FullStudyEntity extends AbstractStudyEntity {
+public class CompositeStudyEntity extends StudyEntity {
 
   @JsonIgnore
   @OneToMany(cascade = CascadeType.ALL,
-      fetch = FetchType.LAZY,
-      mappedBy = ModelAttributeNames.STUDY)
+      fetch = FetchType.LAZY)
+  @JoinColumn(name = TableAttributeNames.STUDY_ID)
   private Set<File> files = newHashSet();
 
   @JsonIgnore
   @OneToMany(cascade = CascadeType.ALL,
-      fetch = FetchType.LAZY,
-      mappedBy = ModelAttributeNames.STUDY)
+      fetch = FetchType.LAZY)
+  @JoinColumn(name = TableAttributeNames.STUDY_ID)
   private Set<BaseAnalysis> analyses = newHashSet();
 
   @JsonIgnore
   @OneToMany(cascade = CascadeType.ALL,
-      fetch = FetchType.LAZY,
-      mappedBy = ModelAttributeNames.STUDY)
+      fetch = FetchType.LAZY)
+  @JoinColumn(name = TableAttributeNames.STUDY_ID)
   private Set<Upload> uploads = newHashSet();
 
   @OneToMany(cascade = CascadeType.ALL,
-      fetch = FetchType.LAZY,
-      mappedBy = ModelAttributeNames.STUDY)
-  private Set<FullDonorEntity> donors = newHashSet();
+      fetch = FetchType.LAZY)
+  @JoinColumn(name = TableAttributeNames.STUDY_ID)
+  private Set<CompositeDonorEntity> donors = newHashSet();
 
-  public static FullStudyEntity buildStudyIdOnly(@NonNull FullStudyEntity studyEntity){
-    return buildStudyIdOnly(studyEntity.getStudyId());
-  }
-
-  public static FullStudyEntity buildStudyIdOnly(String studyId){
-    val s = new FullStudyEntity();
-    s.setStudyId(studyId);
-    return s;
-  }
-
-  public FullStudyEntity addDonor(@NonNull FullDonorEntity donor){
+  public CompositeStudyEntity addDonor(@NonNull CompositeDonorEntity donor){
     donors.add(donor);
-    if (donor.getStudy() != this){
-      donor.setParent(this);
-    }
     return this;
   }
 

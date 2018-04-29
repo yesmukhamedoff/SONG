@@ -18,7 +18,7 @@ package org.icgc.dcc.song.server.repository;
 
 import lombok.val;
 import org.icgc.dcc.song.server.model.Upload;
-import org.icgc.dcc.song.server.model.entity.study.impl.FullStudyEntity;
+import org.icgc.dcc.song.server.model.entity.study.impl.CompositeStudyEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDateTime;
@@ -31,7 +31,7 @@ public interface UploadRepository extends JpaRepository<Upload, String> {
 
 //  @SqlUpdate("INSERT INTO upload (id, study_id, analysis_id, state, payload, updated_at) " +
 //          "VALUES (:id, :studyId, :analysisId, :state, :payload, now())")
-  default int create( String id,  FullStudyEntity study,  String analysisId,
+  default int create( String id,  CompositeStudyEntity study,  String analysisId,
               String state,  String jsonPayload){
     val createdAt = LocalDateTime.now();
     val u = Upload.createUpload(id, analysisId, resolveState(state), "", jsonPayload, createdAt, createdAt);
@@ -41,8 +41,8 @@ public interface UploadRepository extends JpaRepository<Upload, String> {
   }
 
 //  @SqlQuery("SELECT id from upload where study_id=:studyId AND analysis_id=:analysisId")
-  List<Upload> findAllByStudyAndAnalysisId(FullStudyEntity study, String analysisId);
-  default List<String> findByBusinessKey( FullStudyEntity study, String analysisId){
+  List<Upload> findAllByStudyAndAnalysisId(CompositeStudyEntity study, String analysisId);
+  default List<String> findByBusinessKey( CompositeStudyEntity study, String analysisId){
     return findAllByStudyAndAnalysisId(study, analysisId).stream()
         .map(Upload::getUploadId).collect(
         toImmutableList());

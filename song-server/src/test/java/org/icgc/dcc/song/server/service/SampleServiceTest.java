@@ -20,10 +20,8 @@ import com.google.common.collect.Sets;
 import lombok.val;
 import org.icgc.dcc.song.core.utils.JsonUtils;
 import org.icgc.dcc.song.core.utils.RandomGenerator;
-import org.icgc.dcc.song.server.model.entity.sample.AbstractSampleEntity;
-import org.icgc.dcc.song.server.model.entity.sample.impl.FullSampleEntity;
-import org.icgc.dcc.song.server.model.entity.sample.impl.SterileSampleEntity;
-import org.icgc.dcc.song.server.model.entity.specimen.impl.FullSpecimenEntity;
+import org.icgc.dcc.song.server.model.entity.sample.CompositeSampleEntity;
+import org.icgc.dcc.song.server.model.entity.sample.SampleEntity;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -42,10 +40,12 @@ import static org.icgc.dcc.song.core.exceptions.ServerErrors.SAMPLE_ID_IS_CORRUP
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.STUDY_ID_DOES_NOT_EXIST;
 import static org.icgc.dcc.song.core.testing.SongErrorAssertions.assertSongError;
 import static org.icgc.dcc.song.core.utils.RandomGenerator.createRandomGenerator;
-import static org.icgc.dcc.song.server.model.entity.sample.impl.FullSampleEntity.createFullSampleEntity;
-import static org.icgc.dcc.song.server.model.entity.sample.impl.SterileSampleEntity.createSterileSample;
+import static org.icgc.dcc.song.server.model.entity.sample.CompositeSampleEntity.buildSampleCreateRequest;
+import static org.icgc.dcc.song.server.model.entity.sample.Sample.createSample;
+import static org.icgc.dcc.song.server.model.entity.sample.SampleEntity.createSampleEntity;
+import static org.icgc.dcc.song.server.model.entity.specimen.CompositeSpecimenEntity.buildSpecimenCreateRequest;
+import static org.icgc.dcc.song.server.model.entity.specimen.Specimen.createSpecimen;
 import static org.icgc.dcc.song.server.model.enums.Constants.SAMPLE_TYPE;
-import static org.icgc.dcc.song.server.model.enums.Constants.SPECIMEN_CLASS;
 import static org.icgc.dcc.song.server.model.enums.Constants.SPECIMEN_TYPE;
 import static org.icgc.dcc.song.server.utils.TestConstants.DEFAULT_DONOR_ID;
 import static org.icgc.dcc.song.server.utils.TestConstants.DEFAULT_SAMPLE_ID;
@@ -92,11 +92,12 @@ public class SampleServiceTest {
   @Test
   public void testCreateAndDeleteSample() {
     val specimenId = "SP2";
-    val specimenParent = specimenService.read(specimenId);
     val metadata = JsonUtils.fromSingleQuoted("{'ageCategory': 3, 'species': 'human'}");
-    val s = createFullSampleEntity("", specimenParent,
-        "101-IP-A","Amplified DNA");
-    s.setInfo(metadata);
+    val sampleData = createSample("101-IP-A","Amplified DNA");
+    sampleData.setInfo(metadata);
+
+    val s = new CompositeSampleEntity();
+    s.setWithSample(sampleData);
 
     val status = sampleService.create(DEFAULT_STUDY_ID, s);
     val id = s.getSampleId();
@@ -117,26 +118,28 @@ public class SampleServiceTest {
   public void testUpdateSample() {
 
     val specimenId = "SP2";
-    val specimenParent = specimenService.read(specimenId);
-    val s = createFullSampleEntity("", specimenParent,"102-CBP-A", "RNA");
+    val sampleData = createSample("102-CBP-A", "RNA");
+    val sampleCreateRequest = buildSampleCreateRequest(specimenId, sampleData);
 
-    val id = sampleService.create(DEFAULT_STUDY_ID, s);
+    val id = sampleService.create(DEFAULT_STUDY_ID, sampleCreateRequest);
 
     val metadata = JsonUtils.fromSingleQuoted("{'species': 'Canadian Beaver'}");
-    val s2 = createSterileSample(id, specimenId, "Sample 102", "FFPE RNA");
-    s2.setInfo(metadata);
-    sampleService.update(s2);
-    val s2Full = createFullSampleEntity(s2.getSampleId(), specimenParent, s2);
-    s2Full.setInfo(s2.getInfo());
+    val sampleUpdateRequest = createSample("Sample 102", "FFPE RNA");
+    sampleUpdateRequest.setInfo(metadata);
 
-    val s3 = sampleService.read(id);
-    assertThat(s3).isEqualTo(s2Full);
+    sampleService.update(id, sampleUpdateRequest);
+
+    val expectedSampleEntity = new CompositeSampleEntity();
+    expectedSampleEntity.setWithSampleEntity(createSampleEntity(id, specimenId, sampleUpdateRequest));
+
+    val actualSampleEntity = sampleService.read(id);
+    assertThat(actualSampleEntity).isEqualTo(expectedSampleEntity);
   }
 
   @Test
   public void testCreateStudyDNE(){
     val randomStudyId = randomGenerator.generateRandomUUIDAsString();
-    val sample = new FullSampleEntity();
+    val sample = new CompositeSampleEntity();
     assertSongError(() -> sampleService.create(randomStudyId, sample), STUDY_ID_DOES_NOT_EXIST);
   }
 
@@ -146,26 +149,30 @@ public class SampleServiceTest {
     val existingStudyId = DEFAULT_STUDY_ID;
     val specimenParent = specimenService.read(specimenId);
 
-    val sample = new FullSampleEntity();
-    sample.setSampleSubmitterId(randomGenerator.generateRandomUUIDAsString());
-    sample.setSampleType(randomGenerator.randomElement(newArrayList(SAMPLE_TYPE)));
-    sample.setSpecimen(specimenParent);
+    val sampleData = createSample(randomGenerator.generateRandomUUIDAsString(),
+        randomGenerator.randomElement(newArrayList(SAMPLE_TYPE)));
+    val sampleCreateRequest = buildSampleCreateRequest(specimenId, sampleData);
+
 
     // Create a sample
-    val sampleId = sampleService.create(existingStudyId, sample);
+    val sampleId = sampleService.create(existingStudyId, sampleCreateRequest);
     assertThat(sampleService.isSampleExist(sampleId)).isTrue();
 
     // Try to create the sample again, and assert that the right exception is thrown
-    assertSongError(() -> sampleService.create(existingStudyId, sample), SAMPLE_ALREADY_EXISTS);
+    assertSongError(() -> sampleService.create(existingStudyId, sampleCreateRequest), SAMPLE_ALREADY_EXISTS);
 
     // 'Accidentally' set the sampleId to something not generated by the idService, and try to create. Should
     // detected the corrupted id field, indicating user might have accidentally set the id, thinking it would be
     // persisted
-    val sample2 = new FullSampleEntity();
-    sample2.setSpecimen(specimenParent);
-    sample2.setSampleType(randomGenerator.randomElement(newArrayList(SAMPLE_TYPE)));
-    sample2.setSampleSubmitterId(randomGenerator.generateRandomUUIDAsString());
-    sample2.setSampleId(randomGenerator.generateRandomUUIDAsString());
+    val sample2 = new CompositeSampleEntity();
+    sample2.setWithSampleEntity(
+        createSampleEntity(
+            randomGenerator.generateRandomUUIDAsString(),
+            specimenId,
+            randomGenerator.generateRandomUUIDAsString(),
+            randomGenerator.randomElement(newArrayList(SAMPLE_TYPE))));
+
+
     assertThat(sampleService.isSampleExist(sample2.getSampleId())).isFalse();
     assertSongError(() -> sampleService.create(existingStudyId, sample2), SAMPLE_ID_IS_CORRUPTED);
   }
@@ -195,32 +202,34 @@ public class SampleServiceTest {
   public void testReadAndDeleteByParentId(){
     val studyId = DEFAULT_STUDY_ID;
     val donorId = DEFAULT_DONOR_ID;
-    val donorParent = donorService.read(donorId);
-    val specimen = new FullSpecimenEntity();
-    specimen.setDonor(donorParent);//specimen.setDonorId(donorId);
-    specimen.setSpecimenClass(randomGenerator.randomElement(newArrayList(SPECIMEN_CLASS)));
-    specimen.setSpecimenType(randomGenerator.randomElement(newArrayList(SPECIMEN_TYPE)));
-    specimen.setSpecimenSubmitterId(randomGenerator.generateRandomUUIDAsString());
+
+    val specimenCreateRequest = buildSpecimenCreateRequest(donorId,
+        createSpecimen(
+            randomGenerator.generateRandomUUIDAsString(),
+            randomGenerator.randomElement(newArrayList(SPECIMEN_TYPE)),
+            randomGenerator.randomElement(newArrayList(SPECIMEN_TYPE))
+        ));
 
     // Create specimen
-    val specimenId = specimenService.create(studyId, specimen);
+    val specimenId = specimenService.create(studyId, specimenCreateRequest);
 
     // Create samples
     val numSamples = 5;
     val expectedSampleIds = Sets.<String>newHashSet();
     for (int i =0; i< numSamples; i++){
-      val sample = new FullSampleEntity();
-      sample.setSpecimen(specimen);
-      sample.setSampleType(randomGenerator.randomElement(newArrayList(SAMPLE_TYPE)));
-      sample.setSampleSubmitterId(randomGenerator.generateRandomUUIDAsString());
-      val sampleId = sampleService.create(studyId, sample);
+      val sampleCreateRequest = buildSampleCreateRequest(specimenId,
+          createSample(
+              randomGenerator.randomElement(newArrayList(SAMPLE_TYPE)),
+              randomGenerator.generateRandomUUIDAsString()));
+
+      val sampleId = sampleService.create(studyId, sampleCreateRequest);
       expectedSampleIds.add(sampleId);
     }
 
     // Read the samples by parent Id (specimenId)
-    val actualSamples = sampleService.readByParent(specimen);
+    val actualSamples = sampleService.readByParentId(specimenId);
     assertThat(actualSamples).hasSize(numSamples);
-    assertThat(actualSamples.stream().map(AbstractSampleEntity::getSampleId).collect(toSet())).containsAll(expectedSampleIds);
+    assertThat(actualSamples.stream().map(SampleEntity::getSampleId).collect(toSet())).containsAll(expectedSampleIds);
 
     // Assert that reading by a non-existent specimenId returns something empty
     val randomSpecimenId = randomGenerator.generateRandomUUIDAsString();
@@ -244,12 +253,12 @@ public class SampleServiceTest {
   @Test
   public void testUpdateSpecimenDNE(){
     val randomSampleId = randomGenerator.generateRandomUUIDAsString();
-    val sample = new SterileSampleEntity();
-    sample.setSampleSubmitterId(randomGenerator.generateRandomUUIDAsString());
-    sample.setSampleId(randomSampleId);
-    sample.setSampleType(randomGenerator.randomElement(newArrayList(SAMPLE_TYPE)));
-    sample.setSpecimenId(DEFAULT_SPECIMEN_ID);
-    assertSongError(() -> sampleService.update(sample), SAMPLE_DOES_NOT_EXIST);
+    val sampleEntity = createSampleEntity(randomSampleId,
+        DEFAULT_SPECIMEN_ID,
+        randomGenerator.generateRandomUUIDAsString(),
+        randomGenerator.randomElement(newArrayList(SAMPLE_TYPE)));
+
+    assertSongError(() -> sampleService.update(sampleEntity.getSampleId(), sampleEntity), SAMPLE_DOES_NOT_EXIST);
   }
 
 }

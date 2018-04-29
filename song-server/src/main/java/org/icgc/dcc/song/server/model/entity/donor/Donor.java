@@ -1,20 +1,47 @@
 package org.icgc.dcc.song.server.model.entity.donor;
 
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NonNull;
+import lombok.ToString;
+import lombok.val;
+import org.icgc.dcc.song.server.model.Metadata;
+import org.icgc.dcc.song.server.model.enums.TableAttributeNames;
 
-public interface Donor {
+import javax.persistence.Column;
+import javax.persistence.MappedSuperclass;
 
-  String getDonorSubmitterId();
+import static org.icgc.dcc.song.server.model.enums.Constants.DONOR_GENDER;
+import static org.icgc.dcc.song.server.model.enums.Constants.validate;
 
-  String getDonorGender();
+@Data
+@MappedSuperclass
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
+public class Donor extends Metadata {
 
-  void setDonorSubmitterId(String donorSubmitterId);
+  @Column(name = TableAttributeNames.SUBMITTER_ID, nullable = false)
+  private String donorSubmitterId;
 
-  void setDonorGender(String gender);
+  @Column(name = TableAttributeNames.GENDER, nullable = false)
+  private String donorGender;
 
-  default void setWithDonor(@NonNull Donor donor){
-    setDonorGender(donor.getDonorGender());
+  public void setDonorGender(String gender) {
+    validate(DONOR_GENDER, gender);
+    this.donorGender = gender;
+  }
+
+  public void setWithDonor(@NonNull Donor donor){
     setDonorSubmitterId(donor.getDonorSubmitterId());
+    setDonorGender(donor.getDonorGender());
+    setInfo(donor.getInfo());
+  }
+
+  public static Donor createDonor(String donorSubmitterId, String donorGender){
+    val d = new Donor();
+    d.setDonorSubmitterId(donorSubmitterId);
+    d.setDonorGender(donorGender);
+    return d;
   }
 
 }

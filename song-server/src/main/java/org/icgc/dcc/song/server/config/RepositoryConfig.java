@@ -1,7 +1,7 @@
 package org.icgc.dcc.song.server.config;
 
 import lombok.val;
-import org.icgc.dcc.song.server.model.entity.study.impl.FullStudyEntity;
+import org.icgc.dcc.song.server.model.entity.study.impl.CompositeStudyEntity;
 import org.icgc.dcc.song.server.model.enums.ModelAttributeNames;
 import org.icgc.dcc.song.server.repository.FetchPlanner;
 import org.icgc.dcc.song.server.utils.graph.SimpleGraph;
@@ -22,7 +22,7 @@ public class RepositoryConfig {
 
 
   @Bean
-  public FetchPlanner<FullStudyEntity, String> studyWithDonorsFetchPlan(){
+  public FetchPlanner<CompositeStudyEntity, String> studyWithDonorsFetchPlan(){
     val nodePath = SimpleNodePath.<String>builder()
         .node(ModelAttributeNames.DONORS)
         .node(ModelAttributeNames.SPECIMENS)
@@ -32,11 +32,11 @@ public class RepositoryConfig {
         .graphPath(nodePath)
         .build();
     val graph = simpleGraph.mergePaths();
-    return createFetchPlanner(FullStudyEntity.class, entityManager, graph,  ModelAttributeNames.DONORS);
+    return createFetchPlanner(CompositeStudyEntity.class, entityManager, graph,  ModelAttributeNames.DONORS);
   }
 
   @Bean
-  public FetchPlanner<FullStudyEntity, String> studyWithDonorsInfoFetchPlan(){
+  public FetchPlanner<CompositeStudyEntity, String> studyWithDonorsInfoFetchPlan(){
     val samplePath = SimpleNodePath.<String>builder()
         .node(ModelAttributeNames.DONORS)
         .node(ModelAttributeNames.SPECIMENS)
@@ -62,7 +62,7 @@ public class RepositoryConfig {
         .graphPath(studyPath)
         .build();
     val graph = simpleGraph.mergePaths();
-    return createFetchPlanner(FullStudyEntity.class, entityManager, graph,  ModelAttributeNames.DONORS);
+    return createFetchPlanner(CompositeStudyEntity.class, entityManager, graph,  ModelAttributeNames.DONORS);
   }
 
 }

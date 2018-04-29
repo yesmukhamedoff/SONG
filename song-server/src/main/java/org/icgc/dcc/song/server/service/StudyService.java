@@ -19,12 +19,10 @@ package org.icgc.dcc.song.server.service;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
-import org.icgc.dcc.song.server.model.entity.study.impl.AbstractStudyEntity;
-import org.icgc.dcc.song.server.model.entity.study.impl.FullStudyEntity;
-import org.icgc.dcc.song.server.model.entity.study.impl.SterileStudyEntity;
-import org.icgc.dcc.song.server.model.entity.study.impl.StudyImpl;
-import org.icgc.dcc.song.server.repository.FullStudyRepository;
-import org.icgc.dcc.song.server.repository.SterileStudyRepository;
+import org.icgc.dcc.song.server.model.entity.study.impl.CompositeStudyEntity;
+import org.icgc.dcc.song.server.model.entity.study.impl.Study;
+import org.icgc.dcc.song.server.model.entity.study.impl.StudyEntity;
+import org.icgc.dcc.song.server.repository.StudyRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -32,32 +30,27 @@ import java.util.List;
 
 import static java.lang.Thread.currentThread;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
-import static org.icgc.dcc.song.core.exceptions.ServerErrors.ENTITY_NOT_IMPLEMENTED;
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.STUDY_ALREADY_EXISTS;
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.STUDY_ID_DOES_NOT_EXIST;
-import static org.icgc.dcc.song.core.exceptions.ServerException.buildServerException;
 import static org.icgc.dcc.song.core.exceptions.ServerException.checkServer;
-import static org.icgc.dcc.song.server.model.entity.study.impl.SterileStudyEntity.createSterileStudy;
+import static org.icgc.dcc.song.server.model.entity.study.impl.StudyEntity.createStudyEntity;
 
 @Service
 public class StudyService {
 
-  private final FullStudyRepository fullRepository;
-  private final SterileStudyRepository sterileRepository;
+  private final StudyRepository fullRepository;
   private final StudyInfoService infoService;
 
   @Autowired
   public StudyService(
-      @NonNull FullStudyRepository fullRepository,
-      @NonNull SterileStudyRepository sterileRepository,
+      @NonNull StudyRepository fullRepository,
       @NonNull StudyInfoService studyInfoService){
     this.infoService = studyInfoService;
-    this.sterileRepository = sterileRepository;
     this.fullRepository = fullRepository;
   }
 
   @SneakyThrows
-  public FullStudyEntity read(@NonNull String studyId) {
+  public CompositeStudyEntity read(@NonNull String studyId) {
     val studyResponseResult = fullRepository.findById(studyId);
     checkServer(studyResponseResult.isPresent(), getClass(), STUDY_ID_DOES_NOT_EXIST,
         "The studyId '%s' does not exist", studyId);
@@ -72,28 +65,38 @@ public class StudyService {
   }
 
   //TODO: rtisma need to test
-  public void create(@NonNull String id, @NonNull StudyImpl studyRequest) {
-    create(createSterileStudy(id, studyRequest));
-  }
-
-  //TODO: rtisma need to test
-  public void create(@NonNull AbstractStudyEntity studyEntity) {
+  public void create(@NonNull CompositeStudyEntity studyEntity) {
     internalSave(studyEntity, false);
   }
 
   //TODO: rtisma need to test
-  public void update(@NonNull String id, @NonNull StudyImpl studyRequest) {
-    update(createSterileStudy(id, studyRequest));
+  public void create(@NonNull StudyEntity studyEntity) {
+    create(buildEmpty(studyEntity));
   }
 
   //TODO: rtisma need to test
-  public void update(@NonNull AbstractStudyEntity studyEntity) {
-    internalSave(studyEntity, true);
+  public void create(@NonNull String id, @NonNull Study study) {
+    create(createStudyEntity(id, study));
+  }
+
+  //TODO: rtisma need to test
+  public void update(@NonNull CompositeStudyEntity compositeStudyEntity) {
+    internalSave(compositeStudyEntity, true);
+  }
+
+  //TODO: rtisma need to test
+  public void update(@NonNull StudyEntity studyEntity) {
+    update(buildEmpty(studyEntity));
+  }
+
+  //TODO: rtisma need to test
+  public void update(@NonNull String id, @NonNull Study study) {
+    update(createStudyEntity(id, study));
   }
 
   public List<String> findAllStudies() {
     return fullRepository.findAll().stream()
-        .map(AbstractStudyEntity::getStudyId)
+        .map(StudyEntity::getStudyId)
         .collect(toImmutableList());
   }
 
@@ -104,37 +107,32 @@ public class StudyService {
         "The studyId '%s' does not exist", studyId);
   }
 
-  private void internalSave(AbstractStudyEntity studyEntity, boolean isUpdate) {
+  private void internalSave(CompositeStudyEntity compositeStudyEntity, boolean isUpdate) {
     // Check study existence depending on if this is an update
-    val id = studyEntity.getStudyId();
+    val id = compositeStudyEntity.getStudyId();
     if (isUpdate){
-      checkStudyExist(studyEntity.getStudyId());
+      checkStudyExist(compositeStudyEntity.getStudyId());
     } else {
       checkServer(!isStudyExist(id), getClass(), STUDY_ALREADY_EXISTS,
           "The studyId '%s' already exists. Cannot save the study: %s " ,
           id,
-          studyEntity);
+          compositeStudyEntity);
     }
 
-    //TODO: rtisma try to refactor this somehow when more mature
-    // Save entity based on instance type. Not cleanest way of doing this
-    if (studyEntity instanceof SterileStudyEntity){
-      sterileRepository.save((SterileStudyEntity)studyEntity);
-    } else if(studyEntity instanceof FullStudyEntity){
-      fullRepository.save((FullStudyEntity)studyEntity);
-    } else {
-      throw buildServerException(getClass(), ENTITY_NOT_IMPLEMENTED,
-          "Unimplemented subclass of AbstractStudyEntity: %s",
-          studyEntity.getClass());
-    }
+    fullRepository.save(compositeStudyEntity);
 
     // Update or Create study info data
     if(isUpdate) {
-      infoService.update(id, studyEntity.getInfoAsString());
+      infoService.update(id, compositeStudyEntity.getInfoAsString());
     } else {
-      infoService.create(id, studyEntity.getInfoAsString());
+      infoService.create(id, compositeStudyEntity.getInfoAsString());
     }
   }
 
+  private CompositeStudyEntity buildEmpty(StudyEntity studyEntity){
+    val s = new CompositeStudyEntity();
+    s.setWithStudyEntity(studyEntity);
+    return s;
+  }
 
 }

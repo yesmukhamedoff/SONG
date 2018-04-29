@@ -16,16 +16,18 @@
  */
 package org.icgc.dcc.song.server.repository;
 
-import org.icgc.dcc.song.server.model.entity.donor.impl.FullDonorEntity;
-import org.icgc.dcc.song.server.model.entity.specimen.impl.FullSpecimenEntity;
+import org.icgc.dcc.song.server.model.entity.sample.CompositeSampleEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Set;
 
-public interface FullSpecimenRepository extends JpaRepository<FullSpecimenEntity, String> {
+@Transactional
+public interface SampleRepository extends JpaRepository<CompositeSampleEntity, String> {
 
-  Set<FullSpecimenEntity> findAllBySpecimenSubmitterId(String specimenSubmitterId);
-  List<FullSpecimenEntity> findAllByDonor(FullDonorEntity donorEntity);
+  Set<CompositeSampleEntity> findAllBySpecimenId(String specimenId);
+  List<CompositeSampleEntity> findAllBySampleSubmitterId(String sampleSubmitterId);
+  void deleteAllBySpecimenId(String specimenId);
 
 }

@@ -9,8 +9,8 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.icgc.dcc.song.server.model.Metadata;
 import org.icgc.dcc.song.server.model.entity.File;
-import org.icgc.dcc.song.server.model.entity.sample.impl.FullSampleEntity;
-import org.icgc.dcc.song.server.model.entity.study.impl.FullStudyEntity;
+import org.icgc.dcc.song.server.model.entity.sample.CompositeSampleEntity;
+import org.icgc.dcc.song.server.model.entity.study.impl.CompositeStudyEntity;
 import org.icgc.dcc.song.server.model.enums.Constants;
 import org.icgc.dcc.song.server.model.enums.LombokAttributeNames;
 import org.icgc.dcc.song.server.model.enums.ModelAttributeNames;
@@ -69,7 +69,7 @@ public class BaseAnalysis extends Metadata implements Analysis {
   @JsonIgnore
   @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   @JoinColumn(name = TableAttributeNames.STUDY_ID, nullable = false)
-  private FullStudyEntity study;
+  private CompositeStudyEntity study;
 
   @Column(name = TableAttributeNames.STATE)
   private String analysisState = UNPUBLISHED.name();
@@ -87,7 +87,7 @@ public class BaseAnalysis extends Metadata implements Analysis {
       name = TableNames.SAMPLESET,
       joinColumns = @JoinColumn(name = TableAttributeNames.ANALYSIS_ID),
       inverseJoinColumns = @JoinColumn(name = TableAttributeNames.SAMPLE_ID))
-  private Set<FullSampleEntity> samples = newHashSet();
+  private Set<CompositeSampleEntity> samples = newHashSet();
 
   @Override
   public void setAnalysisState(String state) {

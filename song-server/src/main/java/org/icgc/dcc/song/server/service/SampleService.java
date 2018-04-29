@@ -20,14 +20,13 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.icgc.dcc.song.server.model.entity.donor.impl.FullDonorEntity;
-import org.icgc.dcc.song.server.model.entity.sample.AbstractSampleEntity;
+import org.icgc.dcc.song.server.model.entity.sample.CompositeSampleEntity;
+import org.icgc.dcc.song.server.model.entity.sample.Sample;
 import org.icgc.dcc.song.server.model.entity.sample.SampleEntity;
-import org.icgc.dcc.song.server.model.entity.sample.impl.FullSampleEntity;
-import org.icgc.dcc.song.server.model.entity.sample.impl.SterileSampleEntity;
-import org.icgc.dcc.song.server.model.entity.specimen.impl.FullSpecimenEntity;
-import org.icgc.dcc.song.server.model.entity.study.impl.AbstractStudyEntity;
-import org.icgc.dcc.song.server.repository.FullSampleRepository;
+import org.icgc.dcc.song.server.repository.DonorRepository;
+import org.icgc.dcc.song.server.repository.SampleRepository;
+import org.icgc.dcc.song.server.repository.SpecimenRepository;
+import org.icgc.dcc.song.server.repository.StudyRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -39,8 +38,8 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.SAMPLE_ALREADY_EXISTS;
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.SAMPLE_DOES_NOT_EXIST;
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.SAMPLE_ID_IS_CORRUPTED;
+import static org.icgc.dcc.song.core.exceptions.ServerErrors.SPECIMEN_ID_NOT_DEFINED;
 import static org.icgc.dcc.song.core.exceptions.ServerException.checkServer;
-import static org.icgc.dcc.song.server.model.entity.specimen.impl.FullSpecimenEntity.buildSpecimenIdOnly;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -49,7 +48,7 @@ import static org.icgc.dcc.song.server.model.entity.specimen.impl.FullSpecimenEn
 public class SampleService {
 
   @Autowired
-  private final FullSampleRepository fullRepository;
+  private final SampleRepository fullRepository;
 
   @Autowired
   private final SampleInfoService infoService;
@@ -59,6 +58,15 @@ public class SampleService {
 
   @Autowired
   private final StudyService studyService;
+
+  @Autowired
+  private final StudyRepository studyRepository;
+
+  @Autowired
+  private final SpecimenRepository specimenRepository;
+
+  @Autowired
+  private final DonorRepository donorRepository;
 
   private String createSampleId(String studyId, SampleEntity sampleEntity){
     studyService.checkStudyExist(studyId);
@@ -72,43 +80,41 @@ public class SampleService {
     return id;
   }
 
-  private FullSampleEntity buildCreateRequest(FullSampleEntity sampleEntity){
-    val orphanedDonor = buildSpecimenIdOnly(sampleEntity.getSpecimen());
-    val s = new FullSampleEntity();
-    s.setSampleId(sampleEntity.getSampleId());
-    s.setSpecimen(orphanedDonor);
-    s.setWithSample(sampleEntity);
-    s.setInfo(sampleEntity.getInfo());
-    return s;
+  public String create(@NonNull String studyId, @NonNull String specimenId, @NonNull Sample sampleData) {
+    val sampleRequest = new CompositeSampleEntity();
+    sampleRequest.setSpecimenId(specimenId);
+    sampleRequest.setWithSample(sampleData);
+    return create(studyId, sampleRequest);
   }
 
   //TODO: [Related to SONG-260] should we add a specimenService.checkSpecimenExists(sample.getSpecimenId()) here?
-  public String create(@NonNull String studyId, @NonNull FullSampleEntity sampleEntity) {
+  public String create(@NonNull String studyId, @NonNull CompositeSampleEntity compositeSampleEntity) {
     //TODO: rtisma check speciemn exists once SpecimenService is working
-    val id = createSampleId(studyId, sampleEntity);
+    val id = createSampleId(studyId, compositeSampleEntity);
 
     //TODO: dont like this implicit modification,
     // but keeping it for backwards compatibility. Maybe should return the inputobject with the field filled
-    sampleEntity.setSampleId(id);
-    val sampleCreateRequest = buildCreateRequest(sampleEntity);
-
-    fullRepository.save(sampleCreateRequest);
-    infoService.create(id, sampleEntity.getInfoAsString());
+    compositeSampleEntity.setSampleId(id);
+    //TODO: rtisma test this
+    checkServer(!isNullOrEmpty(compositeSampleEntity.getSpecimenId()), getClass(), SPECIMEN_ID_NOT_DEFINED,
+        "The CreateSample request is missing the parent specimenId for the data: '%s'", compositeSampleEntity);
+    fullRepository.save(compositeSampleEntity);
+    infoService.create(id, compositeSampleEntity.getInfoAsString());
     return id;
   }
 
-  public FullSampleEntity read(@NonNull String id) {
+  public CompositeSampleEntity read(@NonNull String id) {
     val sampleResult = fullRepository.findById(id);
     return interpretResult(id, sampleResult);
   }
 
-  public void update(@NonNull SterileSampleEntity sampleRequest) {
+  public void update(@NonNull String sampleId, @NonNull Sample sampleUpdate) {
     //TODO: rtisma check that parent specimen still exists
     //TODO: rtisma check that persisted specimenId matches the requested speciemnId. If it doesnt, then its an illegal update since the relationship is being changed. Instead, the user should delete, and then recreate
-    val sample  = read(sampleRequest.getSampleId());
-    sample.setWithSample(sampleRequest);
+    val sample  = read(sampleId);
+    sample.setWithSample(sampleUpdate);
     fullRepository.save(sample);
-    infoService.update(sample.getSampleId(), sampleRequest.getInfoAsString());
+    infoService.update(sample.getSampleId(), sampleUpdate.getInfoAsString());
   }
 
   public void delete(@NonNull String id) {
@@ -121,25 +127,37 @@ public class SampleService {
     ids.forEach(this::delete);
   }
 
-  void deleteByParentId(@NonNull String parentId) {
-    val specimenRequest = new FullSpecimenEntity();
-    specimenRequest.setSpecimenId(parentId);
-    deleteByParent(specimenRequest);
+  void deleteByParentId(@NonNull String specimenId) {
+    fullRepository.deleteAllBySpecimenId(specimenId);
   }
 
-  void deleteByParent(@NonNull FullSpecimenEntity specimenEntity ) {
-    fullRepository.deleteAllBySpecimen(specimenEntity);
-  }
 
   public Optional<String> findByBusinessKey(@NonNull String studyId, @NonNull String submitterId) {
     studyService.checkStudyExist(studyId);
-    return fullRepository.findAllBySampleSubmitterId(submitterId).stream()
-        .map(FullSampleEntity::getSpecimen)
-        .map(FullSpecimenEntity::getDonor)
-        .map(FullDonorEntity::getStudy)
-        .map(AbstractStudyEntity::getStudyId)
-        .filter(x -> x.equals(studyId))
-        .findFirst();
+    val samples = fullRepository.findAllBySampleSubmitterId(submitterId);
+    String sampleId = null;
+    for( val sample : samples){
+      sampleId = sample.getSampleId();
+      val specimenId = sample.getSpecimenId();
+      val specimenResult = specimenRepository.findById(specimenId);
+      if (!specimenResult.isPresent()){
+        sampleId = null;
+        break;
+      }
+      val specimen = specimenResult.get();
+      val donorId = specimen.getDonorId();
+      val donorResult = donorRepository.findById(donorId);
+      if (!donorResult.isPresent()){
+        sampleId = null;
+        break;
+      }
+      val donor = donorResult.get();
+      if (!donor.getStudyId().equals(studyId)){
+        sampleId = null;
+      }
+
+    }
+    return Optional.ofNullable(sampleId);
   }
 
   public boolean isSampleExist(@NonNull String id){
@@ -156,18 +174,13 @@ public class SampleService {
         "The sample with sampleId '%s' already exists", id);
   }
 
-  Set<FullSampleEntity> readByParent(@NonNull FullSpecimenEntity specimenEntity) {
-    val samples = fullRepository.findAllBySpecimen(specimenEntity);
+  Set<CompositeSampleEntity> readByParentId(@NonNull String specimenId) {
+    val samples = fullRepository.findAllBySpecimenId(specimenId);
     samples.forEach(x -> x.setInfo(infoService.readNullableInfo(x.getSampleId())));
     return samples;
   }
 
-  Set<FullSampleEntity> readByParentId(@NonNull String parentId) {
-    val specimenRequest = buildSpecimenIdOnly(parentId);
-    return readByParent(specimenRequest);
-  }
-
-  private <T extends AbstractSampleEntity> T interpretResult(String id , Optional<T> sampleResult) {
+  private <T extends SampleEntity> T interpretResult(String id , Optional<T> sampleResult) {
     checkServer(sampleResult.isPresent(), getClass(), SAMPLE_DOES_NOT_EXIST,
         "The sample for sampleId '%s' could not be read because it does not exist", id);
     val sample = sampleResult.get();

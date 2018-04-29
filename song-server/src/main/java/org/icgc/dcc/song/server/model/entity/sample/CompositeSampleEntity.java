@@ -15,9 +15,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package org.icgc.dcc.song.server.model.entity.sample.impl;
+package org.icgc.dcc.song.server.model.entity.sample;
 
-import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
@@ -26,21 +25,14 @@ import lombok.NonNull;
 import lombok.ToString;
 import lombok.val;
 import org.icgc.dcc.song.server.model.analysis.BaseAnalysis;
-import org.icgc.dcc.song.server.model.entity.sample.AbstractSampleEntity;
-import org.icgc.dcc.song.server.model.entity.sample.Sample;
-import org.icgc.dcc.song.server.model.entity.specimen.impl.FullSpecimenEntity;
-import org.icgc.dcc.song.server.model.enums.JsonAttributeNames;
 import org.icgc.dcc.song.server.model.enums.LombokAttributeNames;
 import org.icgc.dcc.song.server.model.enums.ModelAttributeNames;
-import org.icgc.dcc.song.server.model.enums.TableAttributeNames;
 import org.icgc.dcc.song.server.model.enums.TableNames;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import java.util.Set;
 
@@ -49,53 +41,30 @@ import static com.google.common.collect.Sets.newHashSet;
 @Entity
 @Table(name = TableNames.SAMPLE)
 @EqualsAndHashCode(callSuper = true, exclude = {
-    LombokAttributeNames.specimen,
     LombokAttributeNames.analyses
 })
 @ToString(callSuper = true, exclude = {
-    LombokAttributeNames.specimen,
     LombokAttributeNames.analyses
 })
 @Data
 @JsonInclude(JsonInclude.Include.ALWAYS)
-public class FullSampleEntity extends AbstractSampleEntity {
-
-  @JsonIgnore
-  @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-  @JoinColumn(name = TableAttributeNames.SPECIMEN_ID, nullable = false)
-  private FullSpecimenEntity specimen;
+public class CompositeSampleEntity extends SampleEntity {
 
   @JsonIgnore
   @ManyToMany(mappedBy = ModelAttributeNames.SAMPLES,
       cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   private Set<BaseAnalysis> analyses = newHashSet();
 
-  @JsonGetter(value = JsonAttributeNames.SPECIMEN_ID)
-  public String getSpecimenId(){
-    return getSpecimen().getSpecimenId();
+  public CompositeSampleEntity addAnalysis(@NonNull BaseAnalysis baseAnalysis){
+    this.analyses.add(baseAnalysis);
+    return this;
   }
 
-  public void setParent(@NonNull FullSpecimenEntity specimen){
-    this.specimen = specimen;
-    if(!specimen.getSamples().contains(this)){
-      specimen.addSample(this);
-    }
-  }
-
-
-  public static FullSampleEntity createFullSampleEntity(String id, @NonNull FullSpecimenEntity specimenEntity,
-     @NonNull Sample sample){
-    val s  = new FullSampleEntity();
+  public static CompositeSampleEntity buildSampleCreateRequest(@NonNull String specimenId, @NonNull Sample sample){
+    val s = new CompositeSampleEntity();
+    s.setSpecimenId(specimenId);
     s.setWithSample(sample);
-    s.setSpecimen(specimenEntity);
-    s.setSampleId(id);
     return s;
-  }
-
-  public static FullSampleEntity createFullSampleEntity(String id, @NonNull FullSpecimenEntity specimenEntity,
-      String sampleSubmitterId, String sampleType){
-    val sampleData = createSampleImpl(sampleSubmitterId, sampleType);
-    return createFullSampleEntity(id, specimenEntity, sampleData);
   }
 
 }

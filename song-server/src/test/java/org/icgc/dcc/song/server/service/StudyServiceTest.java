@@ -19,8 +19,7 @@ package org.icgc.dcc.song.server.service;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.dcc.song.core.utils.RandomGenerator;
-import org.icgc.dcc.song.server.model.entity.study.impl.SterileStudyEntity;
-import org.icgc.dcc.song.server.utils.TestFiles;
+import org.icgc.dcc.song.server.repository.BusinessKeyRepository;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +32,7 @@ import static org.icgc.dcc.song.core.exceptions.ServerErrors.STUDY_ALREADY_EXIST
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.STUDY_ID_DOES_NOT_EXIST;
 import static org.icgc.dcc.song.core.testing.SongErrorAssertions.assertSongError;
 import static org.icgc.dcc.song.core.utils.RandomGenerator.createRandomGenerator;
-import static org.icgc.dcc.song.server.model.entity.study.impl.SterileStudyEntity.createSterileStudy;
+import static org.icgc.dcc.song.server.model.entity.study.impl.StudyEntity.createStudyEntity;
 import static org.icgc.dcc.song.server.utils.TestConstants.DEFAULT_STUDY_ID;
 import static org.icgc.dcc.song.server.utils.TestFiles.getInfoName;
 
@@ -66,21 +65,24 @@ public class StudyServiceTest {
     val organization = randomGenerator.generateRandomUUID().toString();
     val name  = randomGenerator.generateRandomAsciiString(10);
     val description = randomGenerator.generateRandomUUID().toString();
-    val sterileStudy = createSterileStudy(studyId, name, organization, description);
+    val studyEntity = createStudyEntity(studyId, name, organization, description);
     val infoKey = randomGenerator.generateRandomUUIDAsString();
     val infoValue = randomGenerator.generateRandomUUIDAsString();
-    sterileStudy.setInfo(infoKey, infoValue);
+    studyEntity.setInfo(infoKey, infoValue);
     assertThat(service.isStudyExist(studyId)).isFalse();
-    service.create(sterileStudy);
+    service.create(studyEntity);
     val readStudy = service.read(studyId);
-    assertThat(readStudy).isEqualToComparingFieldByFieldRecursively(sterileStudy);
+    // Inorder to bypass the lazy initialized proxy
+    val actualStudyEntity = createStudyEntity(readStudy.getStudyId(), readStudy);
+
+    assertThat(actualStudyEntity).isEqualToComparingFieldByFieldRecursively(studyEntity);
   }
 
   @Test
   public void testFindAllStudies(){
     val studyIds = service.findAllStudies();
     assertThat(studyIds).contains(DEFAULT_STUDY_ID, "XYZ234");
-    val study = SterileStudyEntity.createSterileStudy(
+    val study = createStudyEntity(
         randomGenerator.generateRandomUUIDAsString(),
         randomGenerator.generateRandomUUIDAsString(),
         randomGenerator.generateRandomUUIDAsString(),
@@ -112,6 +114,14 @@ public class StudyServiceTest {
     assertThat(service.isStudyExist(existentStudyId)).isTrue();
     val nonExistentStudyId = genStudyId();
     assertThat(service.isStudyExist(nonExistentStudyId)).isFalse();
+  }
+
+  @Autowired BusinessKeyRepository businessKeyRepository;
+
+  @Test
+  public void testRob(){
+    log.info("sdf");
+
   }
 
   private String genStudyId(){

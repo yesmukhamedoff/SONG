@@ -16,15 +16,14 @@
  */
 package org.icgc.dcc.song.server.service;
 
+import com.google.common.collect.ImmutableSet;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
-import org.icgc.dcc.song.server.model.entity.donor.AbstractDonorEntity;
+import org.icgc.dcc.song.server.model.entity.donor.CompositeDonorEntity;
+import org.icgc.dcc.song.server.model.entity.donor.Donor;
 import org.icgc.dcc.song.server.model.entity.donor.DonorEntity;
-import org.icgc.dcc.song.server.model.entity.donor.impl.FullDonorEntity;
-import org.icgc.dcc.song.server.model.entity.study.impl.FullStudyEntity;
-import org.icgc.dcc.song.server.repository.FullDonorRepository;
-import org.icgc.dcc.song.server.repository.SterileDonorRepository;
+import org.icgc.dcc.song.server.repository.DonorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -33,13 +32,12 @@ import java.util.Optional;
 import java.util.Set;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
-import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.DONOR_ALREADY_EXISTS;
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.DONOR_DOES_NOT_EXIST;
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.DONOR_ID_IS_CORRUPTED;
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.DUPLICATE_DONOR_IDS;
+import static org.icgc.dcc.song.core.exceptions.ServerErrors.STUDY_ID_NOT_DEFINED;
 import static org.icgc.dcc.song.core.exceptions.ServerException.checkServer;
-import static org.icgc.dcc.song.server.model.entity.study.impl.FullStudyEntity.buildStudyIdOnly;
 
 @RequiredArgsConstructor
 @Service
@@ -47,9 +45,8 @@ import static org.icgc.dcc.song.server.model.entity.study.impl.FullStudyEntity.b
 public class DonorService {
 
   @Autowired
-  private final FullDonorRepository fullRepository;
-  @Autowired
-  private final SterileDonorRepository sterileRepository;
+  private final DonorRepository fullRepository;
+
   @Autowired
   private final DonorInfoService infoService;
   @Autowired
@@ -59,46 +56,30 @@ public class DonorService {
   @Autowired
   private final StudyService studyService;
 
-  private String createDonorId(DonorEntity donorRequest){
-    studyService.checkStudyExist(donorRequest.getStudyId());
-    val inputDonorId = donorRequest.getDonorId();
-    val id = idService.generateDonorId(donorRequest.getDonorSubmitterId(), donorRequest.getStudyId());
-    checkServer(isNullOrEmpty(inputDonorId) || id.equals(inputDonorId), getClass(),
-        DONOR_ID_IS_CORRUPTED,
-        "The input donorId '%s' is corrupted because it does not match the idServices donorId '%s'",
-        inputDonorId, id);
-    checkDonorDoesNotExist(id);
-    return id;
+  public String create(@NonNull String donorId, @NonNull String studyId,
+      @NonNull Donor donorData) {
+    val donorRequest = new CompositeDonorEntity();
+    donorRequest.setStudyId(studyId);
+    donorRequest.setDonorId(donorId);
+    donorRequest.setWithDonor(donorData);
+    return create(donorRequest);
   }
 
-  /**
-   * This is neccessaary since hibernate does not like it when the entity being saved has no children, however its
-   * parent has children. In this case, when the create method is passed a donorEntity that is populated with children
-   * that have not yet been assigned an id, a new donorEntity must be created that has the same data however is
-   * without children. In addition, the parent should also been without children. All this manipulation is very dirty,
-   * and needs to be refactored.
-   */
-  private FullDonorEntity buildCreateRequest(FullDonorEntity donorEntity){
-    val orphanedStudy= buildStudyIdOnly(donorEntity.getStudy());
-    val d = new FullDonorEntity();
-    d.setDonorId(donorEntity.getDonorId());
-    d.setStudy(orphanedStudy);
-    d.setWithDonor(donorEntity);
-    d.setInfo(donorEntity.getInfo());
-    return d;
-  }
-
-  public String create(@NonNull FullDonorEntity donorRequest) {
+  public String create(@NonNull CompositeDonorEntity donorRequest) {
     val id = createDonorId(donorRequest);
     donorRequest.setDonorId(id);
-    val donorCreateRequest =  buildCreateRequest(donorRequest);
-    fullRepository.save(donorCreateRequest);
+
+    //TODO: rtisma test this
+    checkServer(!isNullOrEmpty(donorRequest.getStudyId()), getClass(), STUDY_ID_NOT_DEFINED,
+        "The CreateDonor request is missing the parent studyId for the data: '%s'", donorRequest);
+
+    fullRepository.save(donorRequest);
     infoService.create(id, donorRequest.getInfoAsString());
     donorRequest.getSpecimens().forEach(x -> specimenService.create(donorRequest.getStudyId(), x));
     return id;
   }
 
-  public FullDonorEntity read(@NonNull String id) {
+  public CompositeDonorEntity read(@NonNull String id) {
     val donorResult = fullRepository.findById(id);
     checkServer(donorResult.isPresent(), getClass(), DONOR_DOES_NOT_EXIST,
       "The donor for donorId '%s' could not be read because it does not exist", id);
@@ -107,33 +88,21 @@ public class DonorService {
     return donor;
   }
 
-  public FullDonorEntity readWithSpecimens(@NonNull String id) {
+  public CompositeDonorEntity readWithSpecimens(@NonNull String id) {
     val donor = read(id);
-    donor.setSpecimens(specimenService.readByParentId(id));
+    populateInplace(donor);
     return donor;
   }
 
-  public FullDonorEntity populateSpecimens(@NonNull FullDonorEntity donorEntity) {
-
-    donorEntity.setSpecimens(specimenService.readByParent(donorEntity));
-    return donorEntity;
-  }
-
-  public Set<FullDonorEntity> readByParent(@NonNull FullStudyEntity studyEntity) {
-    studyService.checkStudyExist(studyEntity.getStudyId());
-    return fullRepository.findAllByStudy(studyEntity) .stream()
-        .map(this::populateSpecimens)
-        .collect(toImmutableSet());
-  }
-
-  public Set<FullDonorEntity> readByParentId(@NonNull String parentId) {
-    val studyRequest = new FullStudyEntity();
-    studyRequest.setStudyId(parentId);
-    return readByParent(studyRequest);
+  public Set<CompositeDonorEntity> readByParentId(@NonNull String studyId) {
+    studyService.checkStudyExist(studyId);
+    val donors = fullRepository.findAllByStudyId(studyId);
+    donors.forEach(this::populateInplace);
+    return ImmutableSet.copyOf(donors);
   }
 
   public boolean isDonorExist(@NonNull String id){
-    return sterileRepository.existsById(id);
+    return fullRepository.existsById(id);
   }
 
   public void checkDonorExists(@NonNull DonorEntity donor){
@@ -150,7 +119,7 @@ public class DonorService {
         "The donor with donorId '%s' already exists", id);
   }
 
-  public void update(@NonNull String id, @NonNull AbstractDonorEntity donorUpdate) {
+  public void update(@NonNull String id, @NonNull Donor donorUpdate) {
     val fullDonor = read(id);
     fullDonor.setWithDonor(donorUpdate);
     fullRepository.save(fullDonor);
@@ -165,30 +134,25 @@ public class DonorService {
     checkDonorExists(id);
     uncheckedDelete(id);
   }
-  private void uncheckedDelete(@NonNull String id) {
-    specimenService.deleteByParentId(id);
-    fullRepository.deleteById(id);
-    infoService.delete(id);
-  }
 
   // TODO: [SONG-254] DeleteByParentId spec missing -- https://github.com/overture-stack/SONG/issues/254
   public void deleteByParentId(@NonNull String studyId) {
     studyService.checkStudyExist(studyId);
-    sterileRepository.findAllByStudyId(studyId)
+    fullRepository.findAllByStudyId(studyId)
         .forEach(d -> uncheckedDelete(d.getDonorId()));
   }
 
   public Optional<String> findByBusinessKey(@NonNull String studyId, @NonNull String submitterId){
-    val donors = sterileRepository.findAllByStudyIdAndDonorSubmitterId(studyId, submitterId);
+    val donors = fullRepository.findAllByStudyIdAndDonorSubmitterId(studyId, submitterId);
     checkServer(donors.size() < 2, getClass(), DUPLICATE_DONOR_IDS,
         "Searching by studyId '%s' and donorSubmitterId '%s' resulted in more than 1 result (%s)",
         studyId, submitterId, donors.size());
     return donors.stream()
-        .map(AbstractDonorEntity::getDonorId)
+        .map(DonorEntity::getDonorId)
         .findFirst();
   }
 
-  public String save(@NonNull FullDonorEntity donor) {
+  public String save(@NonNull CompositeDonorEntity donor) {
     val donorIdResult = findByBusinessKey(donor.getStudyId(), donor.getDonorSubmitterId());
     String donorId;
     if (donorIdResult.isPresent()) {
@@ -198,6 +162,35 @@ public class DonorService {
       donorId = create(donor);
     }
     return donorId;
+  }
+
+  private String createDonorId(DonorEntity donorRequest){
+    studyService.checkStudyExist(donorRequest.getStudyId());
+    val inputDonorId = donorRequest.getDonorId();
+    val id = idService.generateDonorId(donorRequest.getDonorSubmitterId(), donorRequest.getStudyId());
+    checkServer(isNullOrEmpty(inputDonorId) || id.equals(inputDonorId), getClass(),
+        DONOR_ID_IS_CORRUPTED,
+        "The input donorId '%s' is corrupted because it does not match the idServices donorId '%s'",
+        inputDonorId, id);
+    checkDonorDoesNotExist(id);
+    return id;
+  }
+
+  private void populateInplace(CompositeDonorEntity donorEntity){
+    specimenService.readByParentId(donorEntity.getDonorId())
+        .forEach(donorEntity::addSpecimen);
+  }
+
+  private void uncheckedDelete(@NonNull String id) {
+    specimenService.deleteByParentId(id);
+    fullRepository.deleteById(id);
+    infoService.delete(id);
+  }
+
+  private CompositeDonorEntity buildChildless(DonorEntity donorEntity){
+    val cde = new CompositeDonorEntity();
+    cde.setWithDonorEntity(donorEntity);
+    return cde;
   }
 
 }
