@@ -18,5 +18,6 @@ public class TableNames {
 	public static final String VARIANTCALL			=	"variantcall";
 	public static final String UPLOAD						=	"Upload";
 	public static final String INFO							=	"Info";
+	public static final String BUSINESS_KEY_VIEW = "BusinessKeyView";
 
 }

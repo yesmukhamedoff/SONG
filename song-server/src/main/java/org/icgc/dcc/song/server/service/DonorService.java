@@ -56,15 +56,23 @@ public class DonorService {
   @Autowired
   private final StudyService studyService;
 
-  public String create(@NonNull String donorId, @NonNull String studyId,
-      @NonNull Donor donorData) {
+  public String create(@NonNull String studyId, @NonNull Donor donorData) {
     val donorRequest = new CompositeDonorEntity();
     donorRequest.setStudyId(studyId);
-    donorRequest.setDonorId(donorId);
+    donorRequest.setDonorId(null);
     donorRequest.setWithDonor(donorData);
     return create(donorRequest);
   }
+  public String create(@NonNull DonorEntity donorRequest) {
+    val d = new CompositeDonorEntity();
+    d.setWithDonorEntity(donorRequest);
+    val id = create(d);
+    donorRequest.setDonorId(id);
+    return id;
+  }
 
+  //TODO: rtisma remove this, and contrain so that create only takes StudyId and DonorData, not a missleading entity.
+  // The application must create the entity, and not the user.
   public String create(@NonNull CompositeDonorEntity donorRequest) {
     val id = createDonorId(donorRequest);
     donorRequest.setDonorId(id);
@@ -161,7 +169,10 @@ public class DonorService {
         .findFirst();
   }
 
-  public String save(@NonNull CompositeDonorEntity donor) {
+  //TODO: rtisma this should only take a StudyId and a DonorData element. The function already decides the correct id.
+  // Once again, the service layer should be the only thing setting ids. All functions should just except DonorData and/or
+  // studyId
+  public String save(@NonNull DonorEntity donor) {
     val donorIdResult = findByBusinessKey(donor.getStudyId(), donor.getDonorSubmitterId());
     String donorId;
     if (donorIdResult.isPresent()) {
@@ -184,8 +195,7 @@ public class DonorService {
     checkDonorDoesNotExist(id);
     return id;
   }
-
-  private void populateInplace(CompositeDonorEntity donorEntity){
+private void populateInplace(CompositeDonorEntity donorEntity){
     specimenService.readByParentId(donorEntity.getDonorId())
         .forEach(donorEntity::addSpecimen);
   }

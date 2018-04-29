@@ -21,13 +21,12 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.icgc.dcc.song.server.model.entity.BusinessKeyView;
 import org.icgc.dcc.song.server.model.entity.sample.CompositeSampleEntity;
 import org.icgc.dcc.song.server.model.entity.sample.Sample;
 import org.icgc.dcc.song.server.model.entity.sample.SampleEntity;
-import org.icgc.dcc.song.server.repository.DonorRepository;
+import org.icgc.dcc.song.server.repository.BusinessKeyRepository;
 import org.icgc.dcc.song.server.repository.SampleRepository;
-import org.icgc.dcc.song.server.repository.SpecimenRepository;
-import org.icgc.dcc.song.server.repository.StudyRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -61,13 +60,7 @@ public class SampleService {
   private final StudyService studyService;
 
   @Autowired
-  private final StudyRepository studyRepository;
-
-  @Autowired
-  private final SpecimenRepository specimenRepository;
-
-  @Autowired
-  private final DonorRepository donorRepository;
+  private final BusinessKeyRepository businessKeyRepository;
 
   private String createSampleId(String studyId, SampleEntity sampleEntity){
     studyService.checkStudyExist(studyId);
@@ -140,6 +133,14 @@ public class SampleService {
 
 
   public Optional<String> findByBusinessKey(@NonNull String studyId, @NonNull String submitterId) {
+    return businessKeyRepository.findAllByStudyIdAndSampleSubmitterId(studyId, submitterId)
+        .stream()
+        .map(BusinessKeyView::getSampleId)
+        .findFirst();
+  }
+
+  /*
+  private Optional<String> findByBusinessKey_OLD(@NonNull String studyId, @NonNull String submitterId) {
     studyService.checkStudyExist(studyId);
     val samples = fullRepository.findAllBySampleSubmitterId(submitterId);
     String sampleId = null;
@@ -166,6 +167,7 @@ public class SampleService {
     }
     return Optional.ofNullable(sampleId);
   }
+  */
 
   public boolean isSampleExist(@NonNull String id){
     return fullRepository.existsById(id);

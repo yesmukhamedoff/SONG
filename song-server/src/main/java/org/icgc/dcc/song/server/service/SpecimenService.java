@@ -17,20 +17,18 @@
 package org.icgc.dcc.song.server.service;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
-import org.icgc.dcc.song.server.model.entity.donor.DonorEntity;
+import org.icgc.dcc.song.server.model.entity.BusinessKeyView;
 import org.icgc.dcc.song.server.model.entity.specimen.CompositeSpecimenEntity;
 import org.icgc.dcc.song.server.model.entity.specimen.Specimen;
 import org.icgc.dcc.song.server.model.entity.specimen.SpecimenEntity;
-import org.icgc.dcc.song.server.repository.DonorRepository;
+import org.icgc.dcc.song.server.repository.BusinessKeyRepository;
 import org.icgc.dcc.song.server.repository.SpecimenRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -59,7 +57,7 @@ public class SpecimenService {
   @Autowired
   private final StudyService studyService;
   @Autowired
-  private final DonorRepository donorRepository;
+  private final BusinessKeyRepository businessKeyRepository;
 
   private String createSpecimenId(String studyId, SpecimenEntity specimenRequest){
     studyService.checkStudyExist(studyId);
@@ -170,8 +168,16 @@ public class SpecimenService {
         .forEach(this::internalDelete);
   }
 
+  public Optional<String> findByBusinessKey(@NonNull String studyId, @NonNull String submitterId) {
+    return businessKeyRepository.findAllByStudyIdAndSpecimenSubmitterId(studyId, submitterId)
+        .stream()
+        .map(BusinessKeyView::getSpecimenId)
+        .findFirst();
+  }
+
   //TODO: rtisma not the most efficient. Since we are not using Parent object (it complicated things before), we
   // cannot do specimen.getDonor().getStudy().getStudyId().equals(studyiId) anymore.
+  /*
   public Optional<String> findByBusinessKey(@NonNull String studyId, @NonNull String submitterId) {
     studyService.checkStudyExist(studyId);
     return fullRepository.findAllBySpecimenSubmitterId(submitterId).stream()
@@ -183,6 +189,7 @@ public class SpecimenService {
         .map(DonorEntity::getDonorId)
         .findFirst();
   }
+  */
 
   private void populateInplace(CompositeSpecimenEntity specimenEntity){
     sampleService.readByParentId(specimenEntity.getSpecimenId())

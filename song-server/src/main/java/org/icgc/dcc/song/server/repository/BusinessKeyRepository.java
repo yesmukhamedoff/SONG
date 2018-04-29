@@ -1,16 +1,14 @@
 package org.icgc.dcc.song.server.repository;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Repository;
+import org.icgc.dcc.song.server.model.entity.BusinessKeyView;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-import javax.persistence.EntityManager;
+import java.util.Set;
 
-@Repository
-public class BusinessKeyRepository {
+public interface BusinessKeyRepository extends JpaRepository<BusinessKeyView, String>{
 
- @Autowired
- private EntityManager entityManager;
-
-
+  Set<BusinessKeyView> findAllByStudyIdAndDonorSubmitterId(String studyId, String donorSubmitterId);
+  Set<BusinessKeyView> findAllByStudyIdAndSpecimenSubmitterId(String studyId, String specimenSubmitterId);
+  Set<BusinessKeyView> findAllByStudyIdAndSampleSubmitterId(String studyId, String sampleSubmitterId);
 
 }
