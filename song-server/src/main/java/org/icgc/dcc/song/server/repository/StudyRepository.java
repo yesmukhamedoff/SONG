@@ -1,6 +1,6 @@
 package org.icgc.dcc.song.server.repository;
 
-import org.icgc.dcc.song.server.model.entity.study.impl.CompositeStudyEntity;
+import org.icgc.dcc.song.server.model.entity.study.CompositeStudyEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface StudyRepository extends JpaRepository<CompositeStudyEntity, String> {

@@ -3,15 +3,17 @@ package org.icgc.dcc.song.server.model.analysis;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import org.icgc.dcc.song.server.model.CompositeEntity;
 import org.icgc.dcc.song.server.model.Metadata;
-import org.icgc.dcc.song.server.model.entity.File;
-import org.icgc.dcc.song.server.model.entity.sample.CompositeSampleEntity;
-import org.icgc.dcc.song.server.model.entity.study.impl.CompositeStudyEntity;
+import org.icgc.dcc.song.server.model.entity.file.FileEntity;
+import org.icgc.dcc.song.server.model.entity.study.CompositeStudyEntity;
 import org.icgc.dcc.song.server.model.enums.Constants;
+import org.icgc.dcc.song.server.model.enums.JsonAttributeNames;
 import org.icgc.dcc.song.server.model.enums.LombokAttributeNames;
 import org.icgc.dcc.song.server.model.enums.ModelAttributeNames;
 import org.icgc.dcc.song.server.model.enums.TableAttributeNames;
@@ -25,15 +27,14 @@ import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import java.util.Set;
+import javax.persistence.Transient;
+import java.util.List;
 
-import static com.google.common.collect.Sets.newHashSet;
 import static org.icgc.dcc.song.server.model.enums.AnalysisStates.UNPUBLISHED;
+import static org.icgc.dcc.song.server.model.enums.Constants.SEQUENCING_READ_TYPE;
+import static org.icgc.dcc.song.server.model.enums.Constants.VARIANT_CALL_TYPE;
 
 @Entity
 @Table(name = TableNames.ANALYSIS)
@@ -55,11 +56,11 @@ import static org.icgc.dcc.song.server.model.enums.AnalysisStates.UNPUBLISHED;
     include=JsonTypeInfo.As.EXTERNAL_PROPERTY,
     property=ModelAttributeNames.ANALYSIS_TYPE
 )
-//@JsonSubTypes({
-//    @JsonSubTypes.Type(value=SequencingReadAnalysis.class, name=SEQUENCING_READ_TYPE)
-//    @JsonSubTypes.Type(value=VariantCallAnalysis.class, name=VARIANT_CALL_TYPE)
-//})
-public class BaseAnalysis extends Metadata implements Analysis {
+@JsonSubTypes({
+    @JsonSubTypes.Type(value=SequencingReadAnalysis.class, name=SEQUENCING_READ_TYPE),
+    @JsonSubTypes.Type(value=VariantCallAnalysis.class, name=VARIANT_CALL_TYPE)
+})
+public abstract class AbstractAnalysis extends Metadata {
 
   @Id
   @Column(name = TableAttributeNames.ID,
@@ -75,28 +76,33 @@ public class BaseAnalysis extends Metadata implements Analysis {
   private String analysisState = UNPUBLISHED.name();
 
   @Column(name = TableAttributeNames.TYPE)
-  private String analysisType;
+  public abstract String getAnalysisType();
 
-  @OneToMany(cascade = CascadeType.ALL,
-      fetch = FetchType.LAZY,
-      mappedBy = ModelAttributeNames.ANALYSIS)
-  private Set<File> files = newHashSet();
+  //TODO: rtisma not ready yet for this....
+//  @OneToMany(cascade = CascadeType.ALL,
+//      fetch = FetchType.LAZY,
+//      mappedBy = ModelAttributeNames.ANALYSIS)
+  @Transient
+  private List<FileEntity> files;
 
-  @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-  @JoinTable(
-      name = TableNames.SAMPLESET,
-      joinColumns = @JoinColumn(name = TableAttributeNames.ANALYSIS_ID),
-      inverseJoinColumns = @JoinColumn(name = TableAttributeNames.SAMPLE_ID))
-  private Set<CompositeSampleEntity> samples = newHashSet();
+  @Transient
+  private List<CompositeEntity> samples;
 
-  @Override
+  //TODO: rtisma not ready for this relationship yet....for not managing manually, so this would required
+  // significant change to alot of things downstream
+//  @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+//  @JoinTable(
+//      name = TableNames.SAMPLESET,
+//      joinColumns = @JoinColumn(name = TableAttributeNames.ANALYSIS_ID),
+//      inverseJoinColumns = @JoinColumn(name = TableAttributeNames.SAMPLE_ID))
+//  private Set<CompositeSampleEntity> samples = newHashSet();
+
   public void setAnalysisState(String state) {
     Constants.validate(Constants.ANALYSIS_STATE, state);
     this.analysisState=state;
   }
 
-  @Override
-  @JsonGetter(value = "study")
+  @JsonGetter(value = JsonAttributeNames.STUDY_ID)
   public String getStudyId() {
     return study.getStudyId();
   }

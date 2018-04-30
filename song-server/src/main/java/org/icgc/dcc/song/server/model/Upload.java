@@ -26,7 +26,7 @@ import lombok.Data;
 import lombok.NonNull;
 import lombok.ToString;
 import lombok.val;
-import org.icgc.dcc.song.server.model.entity.study.impl.CompositeStudyEntity;
+import org.icgc.dcc.song.server.model.entity.study.CompositeStudyEntity;
 import org.icgc.dcc.song.server.model.enums.JsonAttributeNames;
 import org.icgc.dcc.song.server.model.enums.ModelAttributeNames;
 import org.icgc.dcc.song.server.model.enums.TableNames;

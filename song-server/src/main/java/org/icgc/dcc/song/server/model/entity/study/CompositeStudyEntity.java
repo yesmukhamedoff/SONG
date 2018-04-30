@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package org.icgc.dcc.song.server.model.entity.study.impl;
+package org.icgc.dcc.song.server.model.entity.study;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -23,8 +23,8 @@ import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.ToString;
 import org.icgc.dcc.song.server.model.Upload;
-import org.icgc.dcc.song.server.model.analysis.BaseAnalysis;
-import org.icgc.dcc.song.server.model.entity.File;
+import org.icgc.dcc.song.server.model.analysis.AbstractAnalysis;
+import org.icgc.dcc.song.server.model.entity.file.FileEntity;
 import org.icgc.dcc.song.server.model.entity.donor.CompositeDonorEntity;
 import org.icgc.dcc.song.server.model.enums.LombokAttributeNames;
 import org.icgc.dcc.song.server.model.enums.ModelAttributeNames;
@@ -79,13 +79,13 @@ public class CompositeStudyEntity extends StudyEntity {
   @OneToMany(cascade = CascadeType.ALL,
       fetch = FetchType.LAZY)
   @JoinColumn(name = TableAttributeNames.STUDY_ID)
-  private Set<File> files = newHashSet();
+  private Set<FileEntity> files = newHashSet();
 
   @JsonIgnore
   @OneToMany(cascade = CascadeType.ALL,
       fetch = FetchType.LAZY)
   @JoinColumn(name = TableAttributeNames.STUDY_ID)
-  private Set<BaseAnalysis> analyses = newHashSet();
+  private Set<AbstractAnalysis> analyses = newHashSet();
 
   @JsonIgnore
   @OneToMany(cascade = CascadeType.ALL,

@@ -1,7 +1,7 @@
 package org.icgc.dcc.song.server.config;
 
 import lombok.val;
-import org.icgc.dcc.song.server.model.entity.study.impl.CompositeStudyEntity;
+import org.icgc.dcc.song.server.model.entity.study.CompositeStudyEntity;
 import org.icgc.dcc.song.server.model.enums.ModelAttributeNames;
 import org.icgc.dcc.song.server.repository.FetchPlanner;
 import org.icgc.dcc.song.server.utils.graph.SimpleGraph;

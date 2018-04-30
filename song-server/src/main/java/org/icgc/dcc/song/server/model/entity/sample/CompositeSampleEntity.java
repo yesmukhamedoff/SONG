@@ -17,48 +17,39 @@
 
 package org.icgc.dcc.song.server.model.entity.sample;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.ToString;
 import lombok.val;
-import org.icgc.dcc.song.server.model.analysis.BaseAnalysis;
-import org.icgc.dcc.song.server.model.enums.LombokAttributeNames;
-import org.icgc.dcc.song.server.model.enums.ModelAttributeNames;
 import org.icgc.dcc.song.server.model.enums.TableNames;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.ManyToMany;
 import javax.persistence.Table;
-import java.util.Set;
-
-import static com.google.common.collect.Sets.newHashSet;
 
 @Entity
 @Table(name = TableNames.SAMPLE)
-@EqualsAndHashCode(callSuper = true, exclude = {
-    LombokAttributeNames.analyses
-})
-@ToString(callSuper = true, exclude = {
-    LombokAttributeNames.analyses
-})
+@EqualsAndHashCode(callSuper = true
+//    , exclude = { LombokAttributeNames.analyses }
+    )
+@ToString(callSuper = true
+//    , exclude = { LombokAttributeNames.analyses }
+)
 @Data
 @JsonInclude(JsonInclude.Include.ALWAYS)
 public class CompositeSampleEntity extends SampleEntity {
 
-  @JsonIgnore
-  @ManyToMany(mappedBy = ModelAttributeNames.SAMPLES,
-      cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-  private Set<BaseAnalysis> analyses = newHashSet();
+  //TODO: rtisma not ready for this yet....
+//  @JsonIgnore
+//  @ManyToMany(mappedBy = ModelAttributeNames.SAMPLES,
+//      cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+//  private Set<AbstractAnalysis> analyses = newHashSet();
 
-  public CompositeSampleEntity addAnalysis(@NonNull BaseAnalysis baseAnalysis){
-    this.analyses.add(baseAnalysis);
-    return this;
-  }
+//  public CompositeSampleEntity addAnalysis(@NonNull AbstractAnalysis abstractAnalysis){
+//    this.analyses.add(abstractAnalysis);
+//    return this;
+//  }
 
   public static CompositeSampleEntity buildSampleCreateRequest(@NonNull String specimenId, @NonNull Sample sample){
     val s = new CompositeSampleEntity();

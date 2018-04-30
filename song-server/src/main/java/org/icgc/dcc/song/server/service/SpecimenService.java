@@ -71,6 +71,14 @@ public class SpecimenService {
     return id;
   }
 
+  public String create(@NonNull String studyId, @NonNull SpecimenEntity specimenEntity) {
+    val request = new CompositeSpecimenEntity();
+    request.setWithSpecimenEntity(specimenEntity);
+    val id = create(studyId, request);
+    specimenEntity.setSpecimenId(request.getSpecimenId());
+    return id;
+  }
+
   public String create(@NonNull String studyId, @NonNull CompositeSpecimenEntity compositeSpecimenEntity) {
     val id = createSpecimenId(studyId, compositeSpecimenEntity);
     compositeSpecimenEntity.setSpecimenId(id);

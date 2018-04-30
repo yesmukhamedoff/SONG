@@ -14,21 +14,21 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package org.icgc.dcc.song.server.model.experiment.impl;
+package org.icgc.dcc.song.server.model.analysis;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.val;
-import org.icgc.dcc.song.server.model.enums.TableNames;
 import org.icgc.dcc.song.server.model.enums.TableAttributeNames;
-import org.icgc.dcc.song.server.model.experiment.AbstractExperiment;
+import org.icgc.dcc.song.server.model.enums.TableNames;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
+
+import static org.icgc.dcc.song.server.model.enums.Constants.VARIANT_CALL_TYPE;
 
 @Entity
 @Table(name = TableNames.VARIANTCALL)
@@ -36,7 +36,7 @@ import javax.persistence.Table;
 @ToString(callSuper = true)
 @Data
 @JsonInclude(JsonInclude.Include.NON_ABSENT)
-public class VariantCallExperiment extends AbstractExperiment {
+public class VariantCallAnalysis extends AbstractAnalysis {
 
   @Column(name = TableAttributeNames.VARIANT_CALLING_TOOL)
   private String variantCallingTool;
@@ -45,13 +45,12 @@ public class VariantCallExperiment extends AbstractExperiment {
   private String matchedNormalSampleSubmitterId;
 
   @Override
-  @JsonIgnore
-  public String getType() {
-    return "variantCall";
+  public String getAnalysisType() {
+    return VARIANT_CALL_TYPE;
   }
 
-  public static VariantCallExperiment create(String id, String tool, String submitterId) {
-    val v = new VariantCallExperiment();
+  public static VariantCallAnalysis createVariantCallAnalysis(String id, String tool, String submitterId) {
+    val v = new VariantCallAnalysis();
     v.setAnalysisId(id);
     v.setVariantCallingTool(tool);
     v.setMatchedNormalSampleSubmitterId(submitterId);

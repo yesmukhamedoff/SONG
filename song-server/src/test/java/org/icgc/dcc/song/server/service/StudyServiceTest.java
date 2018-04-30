@@ -32,7 +32,7 @@ import static org.icgc.dcc.song.core.exceptions.ServerErrors.STUDY_ALREADY_EXIST
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.STUDY_ID_DOES_NOT_EXIST;
 import static org.icgc.dcc.song.core.testing.SongErrorAssertions.assertSongError;
 import static org.icgc.dcc.song.core.utils.RandomGenerator.createRandomGenerator;
-import static org.icgc.dcc.song.server.model.entity.study.impl.StudyEntity.createStudyEntity;
+import static org.icgc.dcc.song.server.model.entity.study.StudyEntity.createStudyEntity;
 import static org.icgc.dcc.song.server.utils.TestConstants.DEFAULT_STUDY_ID;
 import static org.icgc.dcc.song.server.utils.TestFiles.getInfoName;
 

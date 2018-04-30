@@ -19,9 +19,9 @@ package org.icgc.dcc.song.server.service;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
-import org.icgc.dcc.song.server.model.entity.study.impl.CompositeStudyEntity;
-import org.icgc.dcc.song.server.model.entity.study.impl.Study;
-import org.icgc.dcc.song.server.model.entity.study.impl.StudyEntity;
+import org.icgc.dcc.song.server.model.entity.study.CompositeStudyEntity;
+import org.icgc.dcc.song.server.model.entity.study.Study;
+import org.icgc.dcc.song.server.model.entity.study.StudyEntity;
 import org.icgc.dcc.song.server.repository.StudyRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,7 +33,7 @@ import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.STUDY_ALREADY_EXISTS;
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.STUDY_ID_DOES_NOT_EXIST;
 import static org.icgc.dcc.song.core.exceptions.ServerException.checkServer;
-import static org.icgc.dcc.song.server.model.entity.study.impl.StudyEntity.createStudyEntity;
+import static org.icgc.dcc.song.server.model.entity.study.StudyEntity.createStudyEntity;
 
 @Service
 public class StudyService {

@@ -1,4 +1,4 @@
-package org.icgc.dcc.song.server.model.entity.study.impl;
+package org.icgc.dcc.song.server.model.entity.study;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;

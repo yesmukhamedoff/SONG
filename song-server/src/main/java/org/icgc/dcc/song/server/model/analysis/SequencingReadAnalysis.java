@@ -15,9 +15,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package org.icgc.dcc.song.server.model.experiment.impl;
+package org.icgc.dcc.song.server.model.analysis;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Data;
@@ -25,15 +24,15 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.val;
 import org.icgc.dcc.song.server.model.enums.ModelAttributeNames;
-import org.icgc.dcc.song.server.model.enums.TableNames;
 import org.icgc.dcc.song.server.model.enums.TableAttributeNames;
-import org.icgc.dcc.song.server.model.experiment.AbstractExperiment;
+import org.icgc.dcc.song.server.model.enums.TableNames;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 
 import static org.icgc.dcc.song.server.model.enums.Constants.LIBRARY_STRATEGY;
+import static org.icgc.dcc.song.server.model.enums.Constants.SEQUENCING_READ_TYPE;
 import static org.icgc.dcc.song.server.model.enums.Constants.validate;
 
 @Entity
@@ -50,7 +49,7 @@ import static org.icgc.dcc.song.server.model.enums.Constants.validate;
     ModelAttributeNames.INFO})
 @JsonInclude(JsonInclude.Include.NON_ABSENT)
 @Data
-public class SequencingReadExperiment extends AbstractExperiment {
+public class SequencingReadAnalysis extends AbstractAnalysis {
 
   @Column(name = TableAttributeNames.ALIGNED, nullable = true)
   private Boolean aligned;
@@ -71,9 +70,8 @@ public class SequencingReadExperiment extends AbstractExperiment {
   private String referenceGenome;
 
   @Override
-  @JsonIgnore
-  public String getType() {
-    return "sequencingRead";
+  public String getAnalysisType() {
+    return SEQUENCING_READ_TYPE;
   }
 
   public void setLibraryStrategy(String strategy) {
@@ -81,9 +79,9 @@ public class SequencingReadExperiment extends AbstractExperiment {
     libraryStrategy = strategy;
   }
 
-  public static SequencingReadExperiment createSequencingReadExperiment(Boolean aligned, String tool, Long size, String strategy,
+  public static SequencingReadAnalysis createSequencingReadAnalysis(Boolean aligned, String tool, Long size, String strategy,
       Boolean isPaired, String genome) {
-    val s = new SequencingReadExperiment();
+    val s = new SequencingReadAnalysis();
     s.setAligned(aligned);
     s.setAlignmentTool(tool);
     s.setInsertSize(size);

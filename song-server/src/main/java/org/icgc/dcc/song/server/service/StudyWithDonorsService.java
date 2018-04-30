@@ -14,26 +14,29 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package org.icgc.dcc.song.server.repository;
 
-import org.icgc.dcc.song.server.model.entity.file.FileEntity;
-import org.springframework.data.jpa.repository.JpaRepository;
+package org.icgc.dcc.song.server.service;
 
-import java.util.List;
+import lombok.SneakyThrows;
+import lombok.val;
+import org.icgc.dcc.song.server.model.entity.study.CompositeStudyEntity;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-public interface FileRepository extends JpaRepository<FileEntity, String>{
+@Service
+public class StudyWithDonorsService {
 
-//  int create( FileEntity f);
-//
-//  FileEntity read( String id);
-//
-//  int update( FileEntity file);
-//
-//  int delete( String id);
-//
-//  List<FileEntity> readByParentId( String study_id);
-//
-//  String findByBusinessKey( String analysisId,  String fileName);
+  @Autowired
+  private StudyService studyService;
 
-    List<FileEntity> findAllByAnalysisIdAndFileName(String analysisId, String fileName);
+  @Autowired
+  private DonorService donorService;
+
+  @SneakyThrows
+  public CompositeStudyEntity readWithChildren(String studyId) {
+    val s = studyService.read(studyId);
+    s.setDonors(donorService.readByParentId(studyId));
+    return s;
+  }
+
 }

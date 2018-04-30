@@ -18,7 +18,7 @@ package org.icgc.dcc.song.server.repository;
 
 import lombok.val;
 import org.icgc.dcc.song.server.model.Upload;
-import org.icgc.dcc.song.server.model.entity.study.impl.CompositeStudyEntity;
+import org.icgc.dcc.song.server.model.entity.study.CompositeStudyEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDateTime;
