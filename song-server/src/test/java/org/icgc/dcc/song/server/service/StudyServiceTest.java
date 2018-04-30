@@ -19,7 +19,10 @@ package org.icgc.dcc.song.server.service;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.dcc.song.core.utils.RandomGenerator;
-import org.icgc.dcc.song.server.repository.BusinessKeyRepository;
+import org.icgc.dcc.song.server.model.analysis.impl.SequencingReadAnalysisEntity;
+import org.icgc.dcc.song.server.model.enums.Constants;
+import org.icgc.dcc.song.server.repository.AnalysisRepository;
+import org.icgc.dcc.song.server.repository.SequencingReadRepository;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,12 +30,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import static com.google.common.collect.Lists.newArrayList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.STUDY_ALREADY_EXISTS;
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.STUDY_ID_DOES_NOT_EXIST;
 import static org.icgc.dcc.song.core.testing.SongErrorAssertions.assertSongError;
 import static org.icgc.dcc.song.core.utils.RandomGenerator.createRandomGenerator;
 import static org.icgc.dcc.song.server.model.entity.study.StudyEntity.createStudyEntity;
+import static org.icgc.dcc.song.server.model.enums.AnalysisStates.UNPUBLISHED;
 import static org.icgc.dcc.song.server.utils.TestConstants.DEFAULT_STUDY_ID;
 import static org.icgc.dcc.song.server.utils.TestFiles.getInfoName;
 
@@ -116,10 +121,24 @@ public class StudyServiceTest {
     assertThat(service.isStudyExist(nonExistentStudyId)).isFalse();
   }
 
-  @Autowired BusinessKeyRepository businessKeyRepository;
+  @Autowired AnalysisRepository analysisRepository;
+  @Autowired SequencingReadRepository sequencingReadRepository;
 
   @Test
   public void testRob(){
+    val sra = SequencingReadAnalysisEntity.builder()
+        .aligned(true)
+        .alignmentTool("something")
+        .insertSize(23234L)
+        .libraryStrategy(newArrayList(Constants.LIBRARY_STRATEGY).get(0))
+        .pairedEnd(false)
+        .referenceGenome("ref2")
+        .build();
+    sra.setAnalysisId("an2340");
+    sra.setAnalysisState(UNPUBLISHED.toString());
+    analysisRepository.save(sra);
+
+
     log.info("sdf");
 
   }

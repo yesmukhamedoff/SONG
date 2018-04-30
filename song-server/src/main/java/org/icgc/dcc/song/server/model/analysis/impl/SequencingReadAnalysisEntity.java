@@ -15,14 +15,17 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package org.icgc.dcc.song.server.model.analysis;
+package org.icgc.dcc.song.server.model.analysis.impl;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.RequiredArgsConstructor;
 import lombok.ToString;
-import lombok.val;
+import org.icgc.dcc.song.server.model.analysis.AbstractAnalysisEntity;
 import org.icgc.dcc.song.server.model.enums.ModelAttributeNames;
 import org.icgc.dcc.song.server.model.enums.TableAttributeNames;
 import org.icgc.dcc.song.server.model.enums.TableNames;
@@ -49,7 +52,10 @@ import static org.icgc.dcc.song.server.model.enums.Constants.validate;
     ModelAttributeNames.INFO})
 @JsonInclude(JsonInclude.Include.NON_ABSENT)
 @Data
-public class SequencingReadAnalysis extends AbstractAnalysis {
+@Builder
+@AllArgsConstructor
+@RequiredArgsConstructor
+public class SequencingReadAnalysisEntity extends AbstractAnalysisEntity {
 
   @Column(name = TableAttributeNames.ALIGNED, nullable = true)
   private Boolean aligned;
@@ -77,18 +83,6 @@ public class SequencingReadAnalysis extends AbstractAnalysis {
   public void setLibraryStrategy(String strategy) {
     validate(LIBRARY_STRATEGY, strategy);
     libraryStrategy = strategy;
-  }
-
-  public static SequencingReadAnalysis createSequencingReadAnalysis(Boolean aligned, String tool, Long size, String strategy,
-      Boolean isPaired, String genome) {
-    val s = new SequencingReadAnalysis();
-    s.setAligned(aligned);
-    s.setAlignmentTool(tool);
-    s.setInsertSize(size);
-    s.setLibraryStrategy(strategy);
-    s.setPairedEnd(isPaired);
-    s.setReferenceGenome(genome);
-    return s;
   }
 
 }

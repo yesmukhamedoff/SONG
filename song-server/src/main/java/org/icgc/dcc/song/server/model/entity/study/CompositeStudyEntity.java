@@ -23,7 +23,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.ToString;
 import org.icgc.dcc.song.server.model.Upload;
-import org.icgc.dcc.song.server.model.analysis.AbstractAnalysis;
+import org.icgc.dcc.song.server.model.analysis.AbstractAnalysisEntity;
 import org.icgc.dcc.song.server.model.entity.file.FileEntity;
 import org.icgc.dcc.song.server.model.entity.donor.CompositeDonorEntity;
 import org.icgc.dcc.song.server.model.enums.LombokAttributeNames;
@@ -85,7 +85,7 @@ public class CompositeStudyEntity extends StudyEntity {
   @OneToMany(cascade = CascadeType.ALL,
       fetch = FetchType.LAZY)
   @JoinColumn(name = TableAttributeNames.STUDY_ID)
-  private Set<AbstractAnalysis> analyses = newHashSet();
+  private Set<AbstractAnalysisEntity> analyses = newHashSet();
 
   @JsonIgnore
   @OneToMany(cascade = CascadeType.ALL,

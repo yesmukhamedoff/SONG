@@ -14,13 +14,17 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package org.icgc.dcc.song.server.model.analysis;
+package org.icgc.dcc.song.server.model.analysis.impl;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import lombok.val;
+import org.icgc.dcc.song.server.model.analysis.AbstractAnalysisEntity;
 import org.icgc.dcc.song.server.model.enums.TableAttributeNames;
 import org.icgc.dcc.song.server.model.enums.TableNames;
 
@@ -35,8 +39,11 @@ import static org.icgc.dcc.song.server.model.enums.Constants.VARIANT_CALL_TYPE;
 @EqualsAndHashCode(callSuper=true)
 @ToString(callSuper = true)
 @Data
+@AllArgsConstructor
+@RequiredArgsConstructor
+@Builder
 @JsonInclude(JsonInclude.Include.NON_ABSENT)
-public class VariantCallAnalysis extends AbstractAnalysis {
+public class VariantCallAnalysisEntity extends AbstractAnalysisEntity {
 
   @Column(name = TableAttributeNames.VARIANT_CALLING_TOOL)
   private String variantCallingTool;
@@ -49,12 +56,11 @@ public class VariantCallAnalysis extends AbstractAnalysis {
     return VARIANT_CALL_TYPE;
   }
 
-  public static VariantCallAnalysis createVariantCallAnalysis(String id, String tool, String submitterId) {
-    val v = new VariantCallAnalysis();
+  public static VariantCallAnalysisEntity createVariantCallAnalysis(String id, String tool, String submitterId) {
+    val v = new VariantCallAnalysisEntity();
     v.setAnalysisId(id);
     v.setVariantCallingTool(tool);
     v.setMatchedNormalSampleSubmitterId(submitterId);
-
     return v;
   }
 
