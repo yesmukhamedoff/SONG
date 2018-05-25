@@ -1,0 +1,131 @@
+package org.icgc.dcc.song.server.repository;
+
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Streams;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.Value;
+import lombok.val;
+import org.icgc.dcc.common.core.util.stream.Collectors;
+import org.icgc.dcc.song.server.converter.Converter;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+import java.util.Optional;
+
+import static com.google.common.collect.Streams.stream;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
+
+@Value
+public class SafeJpaRepo<D, E, ID> extends JpaRepository<D,ID> {
+
+  @NonNull private final JpaRepository<E,ID> internalRepo;
+  @NonNull private final Converter<E,D> toDtoConverter;
+  @NonNull private final Converter<D,E> toEntityConverter;
+
+  @Override
+  public List<D> findAll() {
+    return toDtoConverter.convertToList(internalRepo.findAll());
+  }
+
+  @Override public List<D> findAll(Sort sort) {
+    return toDtoConverter.convertToList(internalRepo.findAll(sort));
+  }
+
+  @Override public List<D> findAllById(Iterable<ID> iterable) {
+    return toDtoConverter.convertToList(internalRepo.findAllById(iterable));
+  }
+
+  @Override public <S extends D> List<S> saveAll(Iterable<S> iterable) {
+    val entities = toEntityConverter.convertToList(iterable);
+    internalRepo.saveAll(entities);
+    return stream(iterable).collect(toImmutableList());
+  }
+
+  @Override public void flush() {
+    internalRepo.flush();
+  }
+
+  @Override public <S extends D> S saveAndFlush(S s) {
+    internalRepo.saveAndFlush(toEntityConverter.convert(s));
+    return s;
+  }
+
+  @Override public void deleteInBatch(Iterable<D> iterable) {
+    internalRepo.deleteInBatch(toEntityConverter.convertToList(iterable));
+  }
+
+  @Override public void deleteAllInBatch() {
+    internalRepo.deleteAllInBatch();
+  }
+
+  @Override public D getOne(ID id) {
+    return toDtoConverter.convert(internalRepo.getOne(id));
+  }
+
+  @Override public <S extends D> List<S> findAll(Example<S> example) {
+    val convertedExample = Example.of(toEntityConverter.convert(example.getProbe()),example.getMatcher());
+    val entities = internalRepo.findAll(convertedExample);
+    return toDtoConverter.convertToList(entities);
+  }
+
+  @Override public <S extends D> List<S> findAll(Example<S> example, Sort sort) {
+    return null;
+  }
+
+  @Override public Page<D> findAll(Pageable pageable) {
+    return null;
+  }
+
+  @Override public <S extends T> S save(S s) {
+    return null;
+  }
+
+  @Override public Optional<D> findById(ID id) {
+    return Optional.empty();
+  }
+
+  @Override public boolean existsById(ID id) {
+    return false;
+  }
+
+  @Override public long count() {
+    return 0;
+  }
+
+  @Override public void deleteById(ID id) {
+
+  }
+
+  @Override public void delete(D d) {
+
+  }
+
+  @Override public void deleteAll(Iterable<? extends D> iterable) {
+
+  }
+
+  @Override public void deleteAll() {
+
+  }
+
+  @Override public <S extends T> Optional<S> findOne(Example<S> example) {
+    return Optional.empty();
+  }
+
+  @Override public <S extends T> Page<S> findAll(Example<S> example, Pageable pageable) {
+    return null;
+  }
+
+  @Override public <S extends T> long count(Example<S> example) {
+    return 0;
+  }
+
+  @Override public <S extends T> boolean exists(Example<S> example) {
+    return false;
+  }
+}
