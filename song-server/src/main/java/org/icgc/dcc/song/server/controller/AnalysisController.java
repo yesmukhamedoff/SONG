@@ -101,7 +101,7 @@ public class AnalysisController {
       @RequestHeader(value = AUTHORIZATION, required = false) final String accessToken,
       @PathVariable("studyId") String studyId,
       @PathVariable("id") String id) {
-    return analysisService.publish(accessToken,id);
+    return analysisService.publish(accessToken, studyId, id);
   }
 
   @ApiOperation(value = "SuppressAnalysis", notes = "Suppress an analysis. Used if a previously published analysis is"
@@ -113,7 +113,7 @@ public class AnalysisController {
       @RequestHeader(value = AUTHORIZATION, required = false) final String accessToken,
       @PathVariable("studyId") String studyId,
       @PathVariable("id") String id) {
-    return analysisService.suppress(id);
+    return analysisService.suppress(studyId, id);
   }
 
   /***
@@ -126,7 +126,7 @@ public class AnalysisController {
   public AbstractAnalysis read(
       @PathVariable("studyId") String studyId,
       @PathVariable("id") String id) {
-    return analysisService.read(id);
+    return analysisService.read(studyId, id);
   }
 
   /***

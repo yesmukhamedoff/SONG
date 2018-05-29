@@ -21,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.icgc.dcc.song.core.exceptions.ServerException;
 import org.icgc.dcc.song.server.kafka.Sender;
 import org.icgc.dcc.song.server.model.SampleSet;
 import org.icgc.dcc.song.server.model.SampleSetPK;
@@ -61,6 +62,7 @@ import static org.icgc.dcc.song.core.exceptions.ServerErrors.ANALYSIS_ID_NOT_FOU
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.ANALYSIS_MISSING_FILES;
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.ANALYSIS_MISSING_SAMPLES;
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.DUPLICATE_ANALYSIS_ATTEMPT;
+import static org.icgc.dcc.song.core.exceptions.ServerErrors.ENTITY_NOT_RELATED_TO_STUDY;
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.SEQUENCING_READ_NOT_FOUND;
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.UNKNOWN_ERROR;
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.UNPUBLISHED_FILE_IDS;
@@ -244,7 +246,8 @@ public class AnalysisService {
     return searchRepository.infoSearch(request.isIncludeInfo(), request.getSearchTerms());
   }
 
-  public AbstractAnalysis read(String id) {
+  public AbstractAnalysis read(@NonNull String studyId, @NonNull String id) {
+    checkAnalysisBelongsToStudy(studyId, id);
     val analysis = checkAnalysis(id);
     analysis.setInfo(analysisInfoService.readNullableInfo(id));
 
@@ -268,8 +271,24 @@ public class AnalysisService {
     return files;
   }
 
+  /**
+   * Checks that the studyId and analysisId tuple exists
+   */
+  private void checkAnalysisBelongsToStudy(String studyId, String id){
+    val numAnalyses = repository.countByAnalysisIdAndStudy(id, studyId);
+    if (numAnalyses>0){
+      studyService.checkStudyExist(studyId);
+      val analysis = read(id);
+      throw ServerException.buildServerException(AnalysisService.class, ENTITY_NOT_RELATED_TO_STUDY,
+          "The analysisId '%s' is not related to the input studyId '%s'. It is actually related to studyId '%s'",
+          id, studyId, analysis.getStudy() );
+    }
+  }
+
   @Transactional
-  public ResponseEntity<String> publish(@NonNull String accessToken, @NonNull String id) {
+  public ResponseEntity<String> publish(@NonNull String accessToken, @NonNull String studyId, @NonNull String id) {
+    checkAnalysisBelongsToStudy(studyId, id);
+
     val files = readFiles(id);
     val missingFileIds = files.stream()
         .filter(f -> !confirmUploaded(accessToken, f.getObjectId()))
@@ -285,7 +304,8 @@ public class AnalysisService {
   }
 
   @Transactional
-  public ResponseEntity<String> suppress(String id) {
+  public ResponseEntity<String> suppress(@NonNull String studyId, @NonNull String id) {
+    checkAnalysisBelongsToStudy(studyId, id);
     checkedUpdateState(id, SUPPRESSED);
     return ok("AnalysisId %s was suppressed",id);
   }
@@ -337,12 +357,16 @@ public class AnalysisService {
     variantCallInfoService.update(id, experiment.getInfoAsString());
   }
 
+  private static void checkAnalysis(boolean isAnalysisExist, String id){
+    checkServer(isAnalysisExist,
+        AnalysisService.class, ANALYSIS_ID_NOT_FOUND,
+        "The analysisId '%s' was not found", id );
+  }
+
   static AbstractAnalysis checkAnalysis(AnalysisRepository analysisRepository, String id){
     val analysisResult = analysisRepository.findById(id);
 
-    checkServer(analysisResult.isPresent(),
-        AnalysisService.class, ANALYSIS_ID_NOT_FOUND,
-        "The analysisId '%s' was not found", id );
+    checkAnalysis(analysisResult.isPresent(), id);
 
     val analysis = analysisResult.get();
     AbstractAnalysis out;

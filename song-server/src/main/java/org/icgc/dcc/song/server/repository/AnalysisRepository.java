@@ -25,4 +25,6 @@ public interface AnalysisRepository extends JpaRepository<Analysis, String> {
 
   List<Analysis> findAllByStudy(String studyId);
 
+  long countByAnalysisIdAndStudy(String analysisId, String studyId);
+
 }
