@@ -17,11 +17,15 @@
 
 package org.icgc.dcc.song.server.converter;
 
-import org.icgc.dcc.song.server.model.entity.file.impl.File;
+import org.icgc.dcc.song.server.model.ScoreObject;
 import org.icgc.dcc.song.server.model.entity.file.FileData;
+import org.icgc.dcc.song.server.model.entity.file.impl.File;
 import org.icgc.dcc.song.server.model.entity.file.impl.FileUpdateRequest;
+import org.mapstruct.InheritInverseConfiguration;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.Mappings;
 import org.mapstruct.NullValueCheckStrategy;
 
 @Mapper(nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS)
@@ -31,6 +35,14 @@ public interface FileConverter {
   void updateEntityFromData(FileData fileData, @MappingTarget File file);
   File copyFile(File file);
 
+  @Mappings({
+      @Mapping(source = "fileMd5sum", target = "objectMd5"),
+      @Mapping(source = "fileSize", target = "objectSize"),
+  })
+  ScoreObject toScoreObject(File file);
+
+  @InheritInverseConfiguration
+  File fromScoreObject(ScoreObject scoreObject);
 
 
 }

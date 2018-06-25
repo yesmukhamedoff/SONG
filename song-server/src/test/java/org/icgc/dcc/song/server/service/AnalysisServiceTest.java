@@ -23,13 +23,16 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.dcc.song.core.utils.JsonUtils;
 import org.icgc.dcc.song.core.utils.RandomGenerator;
+import org.icgc.dcc.song.server.converter.FileConverter;
 import org.icgc.dcc.song.server.model.Metadata;
 import org.icgc.dcc.song.server.model.analysis.AbstractAnalysis;
 import org.icgc.dcc.song.server.model.analysis.SequencingReadAnalysis;
 import org.icgc.dcc.song.server.model.analysis.VariantCallAnalysis;
-import org.icgc.dcc.song.server.model.entity.file.impl.File;
 import org.icgc.dcc.song.server.model.entity.Sample;
 import org.icgc.dcc.song.server.model.entity.composites.CompositeEntity;
+import org.icgc.dcc.song.server.model.entity.file.impl.File;
+import org.icgc.dcc.song.server.model.enums.AccessTypes;
+import org.icgc.dcc.song.server.model.enums.AnalysisTypes;
 import org.icgc.dcc.song.server.repository.AnalysisRepository;
 import org.icgc.dcc.song.server.repository.FileRepository;
 import org.icgc.dcc.song.server.repository.SampleRepository;
@@ -44,6 +47,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mapstruct.factory.Mappers;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.retry.support.RetryTemplate;
@@ -54,6 +59,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
@@ -61,26 +67,31 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static com.google.common.collect.Sets.newHashSet;
 import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.ANALYSIS_ID_NOT_FOUND;
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.ANALYSIS_MISSING_FILES;
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.ANALYSIS_MISSING_SAMPLES;
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.DUPLICATE_ANALYSIS_ATTEMPT;
+import static org.icgc.dcc.song.core.exceptions.ServerErrors.MISSING_STORAGE_OBJECTS;
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.SEQUENCING_READ_NOT_FOUND;
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.STUDY_ID_DOES_NOT_EXIST;
-import static org.icgc.dcc.song.core.exceptions.ServerErrors.MISSING_STORAGE_OBJECTS;
 import static org.icgc.dcc.song.core.exceptions.ServerErrors.VARIANT_CALL_NOT_FOUND;
 import static org.icgc.dcc.song.core.testing.SongErrorAssertions.assertSongError;
 import static org.icgc.dcc.song.core.utils.JsonUtils.fromJson;
 import static org.icgc.dcc.song.core.utils.JsonUtils.toJson;
 import static org.icgc.dcc.song.core.utils.RandomGenerator.createRandomGenerator;
+import static org.icgc.dcc.song.core.utils.RandomGenerator.randomList;
 import static org.icgc.dcc.song.server.model.enums.AnalysisStates.UNPUBLISHED;
 import static org.icgc.dcc.song.server.model.enums.AnalysisStates.resolveAnalysisState;
 import static org.icgc.dcc.song.server.model.enums.AnalysisTypes.SEQUENCING_READ;
 import static org.icgc.dcc.song.server.model.enums.AnalysisTypes.VARIANT_CALL;
 import static org.icgc.dcc.song.server.model.enums.AnalysisTypes.resolveAnalysisType;
+import static org.icgc.dcc.song.server.model.enums.FileTypes.BAM;
+import static org.icgc.dcc.song.server.model.enums.FileTypes.VCF;
 import static org.icgc.dcc.song.server.repository.search.IdSearchRequest.createIdSearchRequest;
 import static org.icgc.dcc.song.server.service.ScoreService.createScoreService;
 import static org.icgc.dcc.song.server.utils.AnalysisGenerator.createAnalysisGenerator;
@@ -89,6 +100,8 @@ import static org.icgc.dcc.song.server.utils.StudyGenerator.createStudyGenerator
 import static org.icgc.dcc.song.server.utils.TestFiles.assertInfoKVPair;
 import static org.icgc.dcc.song.server.utils.TestFiles.getJsonStringFromClasspath;
 import static org.icgc.dcc.song.server.utils.securestudy.impl.SecureAnalysisTester.createSecureAnalysisTester;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpStatus.OK;
 
 @Slf4j
@@ -757,6 +770,106 @@ public class AnalysisServiceTest {
     assertThat(service.isAnalysisExist(existingAnalysisId)).isTrue();
     assertThat(analysisRepository.existsById(existingAnalysisId)).isTrue();
     assertThat(analysisRepository.existsById(nonExistentAnalysisId)).isFalse();
+  }
+
+
+  public List<File> generateFiles(int maxSize, AbstractAnalysis a){
+    return randomList(() -> generateFile(a), maxSize);
+  }
+
+  public File generateFile(AbstractAnalysis a){
+    val analysisType = AnalysisTypes.resolveAnalysisType(a.getAnalysisType()) ;
+    String fileType = null;
+    String fileName = randomGenerator.generateRandomUUIDAsString()+".";
+
+    if (analysisType == AnalysisTypes.SEQUENCING_READ){
+      fileType = BAM.toString();
+      fileName += BAM.getExtension();
+    } else if (analysisType == AnalysisTypes.VARIANT_CALL){
+      fileType = VCF.toString();
+      fileName += VCF.getExtension()+".gz";
+    }
+    val file = File.builder()
+        .studyId(a.getStudy())
+        .analysisId(a.getAnalysisId())
+        .fileType(fileType)
+        .fileAccess(randomGenerator.randomEnum(AccessTypes.class).toString())
+        .fileMd5sum(randomGenerator.generateRandomMD5())
+        .fileName(fileName)
+        .fileSize((long)randomGenerator.generateRandomIntRange(1,100000))
+        .objectId(randomGenerator.generateRandomUUIDAsString())
+        .build();
+    fileService.create(a.getAnalysisId(), a.getStudy(), file);
+    return file;
+  }
+
+  @Test
+  public void testPublishAdvanced(){
+    val maxSize = 10;
+    // 2 datas: all md5s, mixed undefined, all undefined CROSS all exist, some exist, non exist
+    //
+
+
+    val a = analysisGenerator.createDefaultRandomAnalysis(randomGenerator.randomEnum(AnalysisTypes.class));
+
+    // Delete any previous files
+    fileService.securedDelete(DEFAULT_STUDY_ID, a.getFile().stream().map(File::getObjectId).collect(toList()));
+
+    // generate new files
+    val files = generateFiles(maxSize, a );
+    val allExist = files.size();
+    val someExist = randomGenerator.generateRandomIntRange(2, allExist);
+    val noneExist = 0;
+
+    // all exist and all defined md5s
+    val allDefinedMd5s1 = allExist;
+    val mockScoreService1 = createMockScoreService(files, allExist, allDefinedMd5s1);
+    ReflectionTestUtils.setField(service, "scoreService", mockScoreService1);
+    service.publish("sdf", DEFAULT_STUDY_ID, a.getAnalysisId() )
+
+
+
+    // all exist and some defined md5s
+    // all exist and no defined md5s
+
+    // some exist and of those, all defined md5s
+    // some exist and of those, some defined md5s
+    // some exist and of those, no defined md5s
+
+    // none exist
+  }
+
+  public ScoreService createMockScoreService(List<File> files, int numExisting, int numWithUndefinedMd5){
+    val mockScoreService = mock(ScoreService.class);
+    val fileConverter = Mappers.getMapper(FileConverter.class);
+    // select 'numExisting' amount to actually exist
+    val fileSublist = randomGenerator.randomSublist(files, numExisting).stream()
+        .map(fileConverter::copyFile)
+        .collect(toList());
+
+    // of those existing, choose 'numWithDefinedMd5' amount to have undefined md5sums
+    randomGenerator.randomSublist(fileSublist, numWithUndefinedMd5).forEach(x -> x.setFileMd5sum(null));
+    val scoreObjects = fileSublist.stream()
+        .map(fileConverter::toScoreObject)
+        .collect(toImmutableList());
+
+    // Mock behaviour  for existing scoreObjects
+    for(val scoreObject: scoreObjects){
+      when(mockScoreService.downloadObject(Mockito.anyString(), scoreObject.getObjectId()))
+          .thenReturn(scoreObject);
+      when(mockScoreService.isObjectExist(Mockito.anyString(), scoreObject.getObjectId()))
+          .thenReturn(true);
+    }
+
+    // Mock behaviour  for non-existing scoreObjects
+    for (val file: files){
+      val isNonExistentFile = fileSublist.contains(file);
+      if (isNonExistentFile){
+        when(mockScoreService.isObjectExist(Mockito.anyString(), file.getObjectId()))
+            .thenReturn(false);
+      }
+    }
+    return mockScoreService;
   }
 
   private void runAnalysisMissingSamplesTest(Class<? extends AbstractAnalysis> analysisClass) {
