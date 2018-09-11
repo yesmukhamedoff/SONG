@@ -72,7 +72,7 @@ public class SpecimenService {
   public String create(@NonNull String studyId, @NonNull Specimen specimen) {
     val id = createSpecimenId(studyId, specimen);
     specimen.setSpecimenId(id);
-    repository.save(specimen);
+    repository.save(createSpecimenSaveRequest(specimen));
     infoService.create(id, specimen.getInfoAsString());
     return id;
   }
@@ -119,10 +119,8 @@ public class SpecimenService {
   }
 
   public String update(@NonNull Specimen specimenUpdate) {
-    val specimen = unsecuredRead(specimenUpdate.getSpecimenId());
-
-    specimen.setWithSpecimen(specimenUpdate);
-    repository.save(specimenUpdate);
+    val originalSpecimen = unsecuredRead(specimenUpdate.getSpecimenId());
+    repository.save(createSpecimenUpdateRequest(originalSpecimen, specimenUpdate));
     infoService.update(specimenUpdate.getSpecimenId(), specimenUpdate.getInfoAsString());
     return OK;
   }
@@ -185,5 +183,18 @@ public class SpecimenService {
         .orElse(null);
   }
 
+  private static Specimen createSpecimenUpdateRequest(Specimen originalSpecimen, Specimen specimenUpdate){
+    val updatedSpecimen = createSpecimenSaveRequest(originalSpecimen);
+    updatedSpecimen.setSpecimenClass(specimenUpdate.getSpecimenClass());
+    updatedSpecimen.setSpecimenType(specimenUpdate.getSpecimenType());
+    updatedSpecimen.setInfo(specimenUpdate.getInfo());
+    return updatedSpecimen;
+  }
+
+  private static Specimen createSpecimenSaveRequest(Specimen s){
+    val specimenSaveRequest = new Specimen();
+    specimenSaveRequest.setWithSpecimen(s);
+    return specimenSaveRequest;
+  }
 
 }

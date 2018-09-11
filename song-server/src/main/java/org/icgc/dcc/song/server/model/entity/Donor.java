@@ -86,6 +86,7 @@ public class Donor extends Metadata {
 
   public void setWithDonor(@NonNull Donor donorUpdate){
     setDonorSubmitterId(donorUpdate.getDonorSubmitterId());
+    setStudyId(donorUpdate.getStudyId());
     setDonorGender(donorUpdate.getDonorGender());
     setDonorId(donorUpdate.getDonorId());
     setInfo(donorUpdate.getInfo());

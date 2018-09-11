@@ -71,15 +71,27 @@ public class DonorService {
   public String create(@NonNull DonorWithSpecimens donorWithSpecimens) {
     val id = createDonorId(donorWithSpecimens);
     donorWithSpecimens.setDonorId(id);
-
-    /**
-     * Cannot pass DonorWithSpecimen object to donorReposityr.create() method
-     */
-    val donor = donorWithSpecimens.createDonor();
-    donorRepository.save(donor);
-    infoService.create(id, donor.getInfoAsString());
+    donorRepository.save(createDonorSaveRequest(donorWithSpecimens));
+    infoService.create(id, donorWithSpecimens.getInfoAsString());
     donorWithSpecimens.getSpecimens().forEach(s -> specimenService.create(donorWithSpecimens.getStudyId(), s));
     return id;
+  }
+
+  private static Donor createDonorSaveRequest(DonorWithSpecimens d){
+    return d.createDonor();
+  }
+
+  private static Donor createDonorSaveRequest(Donor d){
+    val donor = new Donor();
+    donor.setWithDonor(d);
+    return donor;
+  }
+
+  private static Donor createDonorUpdateRequest(Donor originalDonor, Donor donorUpdate){
+    val updatedDonor = createDonorSaveRequest(originalDonor);
+    // Constrain update to only non-business keys (only donor gender)
+    updatedDonor.setDonorGender(donorUpdate.getDonorGender());
+    return updatedDonor;
   }
 
   public void checkDonorAndStudyRelated(@NonNull String studyId, @NonNull String id){
@@ -140,11 +152,10 @@ public class DonorService {
   }
 
   public String update(@NonNull Donor donorUpdate) {
-    val donor = unsecuredRead(donorUpdate.getDonorId());
-
-    donor.setWithDonor(donorUpdate);
-    donorRepository.save(donor);
-    infoService.update(donor.getDonorId(), donor.getInfoAsString());
+    val originalDonor = unsecuredRead(donorUpdate.getDonorId());
+    val donorUpdateRequest = createDonorUpdateRequest(originalDonor, donorUpdate);
+    donorRepository.save(donorUpdateRequest);
+    infoService.update(donorUpdateRequest.getDonorId(), donorUpdateRequest.getInfoAsString());
     return OK;
   }
 
@@ -185,18 +196,17 @@ public class DonorService {
 
   public String save(@NonNull String studyId, @NonNull Donor donor) {
     donor.setStudyId(studyId);
-
     val donorIdResult = findByBusinessKey(studyId, donor.getDonorSubmitterId());
-    val donorWithSpecimens = new DonorWithSpecimens();
-    donorWithSpecimens.setDonor(donor);
     String donorId;
     if (!donorIdResult.isPresent()) {
+      val donorWithSpecimens = new DonorWithSpecimens();
+      donorWithSpecimens.setDonor(donor);
       donorId = create(donorWithSpecimens);
+      donor.setDonorId(donorId);
     } else {
       donorId = donorIdResult.get();
-      val updateDonor = donorWithSpecimens.createDonor();
-      updateDonor.setDonorId(donorId);
-      update(updateDonor);
+      donor.setDonorId(donorId);
+      update(donor);
     }
     return donorId;
   }

@@ -64,8 +64,7 @@ public class SampleService {
   public String create(@NonNull String studyId, @NonNull Sample sample) {
     val id = createSampleId(studyId, sample);
     sample.setSampleId(id);
-    sample.setSpecimenId(sample.getSpecimenId());
-    repository.save(sample);
+    repository.save(createSampleSaveRequest(sample));
     infoService.create(id, sample.getInfoAsString());
     return id;
   }
@@ -135,13 +134,19 @@ public class SampleService {
   }
 
   String update(@NonNull Sample sampleUpdate) {
-    val sample = unsecuredRead(sampleUpdate.getSampleId());
-    sample.setSampleSubmitterId(sampleUpdate.getSampleSubmitterId());
-    sample.setSampleType(sampleUpdate.getSampleType());
-    sample.setInfo(sampleUpdate.getInfo());
-    repository.save(sample);
-    infoService.update(sample.getSampleId(), sample.getInfoAsString());
+    val originalSample = unsecuredRead(sampleUpdate.getSampleId());
+    val sampleUpdateRequest = createSampleUpdateRequest(originalSample, sampleUpdate);
+    repository.save(sampleUpdateRequest);
+    infoService.update(originalSample.getSampleId(), originalSample.getInfoAsString());
     return OK;
+  }
+
+  private static Sample createSampleUpdateRequest(Sample sampleOriginal, Sample sampleUpdate){
+    val sampleUpdateRequest = createSampleSaveRequest(sampleOriginal);
+    // An update is constrained to only the sample type and info as these are non business keys
+    sampleUpdateRequest.setSampleType(sampleUpdate.getSampleType());
+    sampleUpdateRequest.setInfo(sampleUpdate.getInfo());
+    return sampleUpdateRequest;
   }
 
   String deleteByParentId(@NonNull String parentId) {
@@ -174,6 +179,12 @@ public class SampleService {
 
   private void unsecuredDelete(@NonNull List<String> ids) {
     ids.forEach(this::unsecuredDelete);
+  }
+
+  private static Sample createSampleSaveRequest(Sample s){
+    val sampleSaveRequest = new Sample();
+    sampleSaveRequest.setWithSample(s);
+    return sampleSaveRequest;
   }
 
 }
