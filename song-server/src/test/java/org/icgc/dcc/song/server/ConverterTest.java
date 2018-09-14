@@ -1,11 +1,19 @@
 package org.icgc.dcc.song.server;
 
-import com.googlecode.protobuf.format.JsonFormat;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.protobuf.ListValue;
+import com.google.protobuf.Struct;
+import com.google.protobuf.Value;
+import com.google.protobuf.util.JsonFormat;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.dcc.song.schema.FileOuterClass;
+import org.icgc.dcc.song.schema.StudyOuterClass;
 import org.icgc.dcc.song.server.config.ConverterConfig;
+import org.icgc.dcc.song.server.converter.FileMapper;
 import org.icgc.dcc.song.server.converter.LegacyEntityConverter;
+import org.icgc.dcc.song.server.model.entity.File;
 import org.icgc.dcc.song.server.model.legacy.LegacyEntity;
 import org.junit.Test;
 
@@ -16,6 +24,18 @@ public class ConverterTest {
 
   private static final ConverterConfig CONVERTER_CONFIG = new ConverterConfig();
   private LegacyEntityConverter legacyEntityConverter = CONVERTER_CONFIG.legacyEntityConverter();
+  private FileMapper fileMapper = CONVERTER_CONFIG.fileMapper();
+
+  @Test
+  public void testR(){
+    val study = StudyOuterClass.Study.newBuilder()
+        .setId("ABC333")
+        .setDescription("something")
+        .setName("SomeName")
+        .build();
+    log.info("sdf");
+
+  }
 
   @Test
   public void testLegacyEntityConversion(){
@@ -45,14 +65,78 @@ public class ConverterTest {
   }
 
   @Test
+  @SneakyThrows
   public void testPro(){
     val mym = FileOuterClass.File.newBuilder()
         .setAnalysisId("sdf")
         .setFileAccess("controlled")
         .build();
-    val f = new JsonFormat();
-    val out = f.printToString(mym);
+    val f = JsonFormat.printer();
+    val out = f.print(mym);
+    val f2 = FileOuterClass.File.newBuilder();
+    JsonFormat.parser().ignoringUnknownFields().merge(out, f2);
+
+    val info = Struct.newBuilder()
+        .putFields("k1", Value.newBuilder().setNumberValue(20.3).build())
+        .putFields("k2", Value.newBuilder()
+            .setListValue(ListValue.newBuilder().addValues(
+                Value.newBuilder().setStringValue("someemelement").build())
+                .build())
+            .build())
+        .putFields("k3",
+            Value.newBuilder().setStructValue(
+                Struct.newBuilder()
+                    .putFields("a1", Value.newBuilder().setStringValue("someA1").build())
+                    .putFields("a2", Value.newBuilder().setStringValue("someA2").build())
+                    .build())
+                .build())
+    .build();
+
+    val k = FileOuterClass.FileEntity.newBuilder()
+        .setAnalysisId("sdfsdf")
+        .setFileSize(22334L)
+        .setInfo(info)
+        .build();
+    val out2 = f.print(k);
+    val f3 = FileOuterClass.FileEntity.newBuilder();
+    JsonFormat.parser().merge(out2,f3);
     log.info("file: {}", out );
+  }
+
+  @Test
+  @SneakyThrows
+  public void testwer(){
+    val file = File.builder()
+        .analysisId("sdfsdf")
+        .fileAccess("controlled")
+        .fileMd5sum("23890ujsdkf89y234")
+        .fileName("soemthing.vcf.gz")
+        .fileSize(234234L)
+        .fileType("VCF")
+        .objectId("238o7nksdf89")
+        .studyId("ABC123")
+        .build();
+
+    val infoProto = Struct.newBuilder()
+        .putFields("k1", Value.newBuilder().setNumberValue(20.3).build())
+        .putFields("k2", Value.newBuilder()
+            .setListValue(ListValue.newBuilder().addValues(
+                Value.newBuilder().setStringValue("someemelement").build())
+                .build())
+            .build())
+        .putFields("k3",
+            Value.newBuilder().setStructValue(
+                Struct.newBuilder()
+                    .putFields("a1", Value.newBuilder().setStringValue("someA1").build())
+                    .putFields("a2", Value.newBuilder().setStringValue("someA2").build())
+                    .build())
+                .build())
+        .build();
+    val jsonString = JsonFormat.printer().print(infoProto);
+    val info  = new ObjectMapper().readTree(jsonString);
+    file.setInfo(info);
+    val protoFile = fileMapper.convertToProtobufFileEntity(file);
+    log.info("sdf");
 
   }
 

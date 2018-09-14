@@ -1,0 +1,18 @@
+
+// This defines the file object
+
+syntax = "proto3";
+
+
+package org.icgc.dcc.song.schema;
+import "google/protobuf/struct.proto";
+
+// Represents the Study object
+message Study {
+    string id = 1;
+    string name = 2;
+    string description = 3;
+    string organization = 4;
+    google.protobuf.Struct info = 5;
+}
+

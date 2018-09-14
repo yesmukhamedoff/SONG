@@ -103,6 +103,14 @@ management:
 
 id.persistInMemory: true
 
+validation:
+  delayMs: 30
+  threads:
+    core: 5
+    max: 10
+  queue:
+    capacity: 100
+
 auth:
   server:
     prefix: "song"

@@ -24,8 +24,8 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.concurrent.Executor;
 
-@Configuration
 @EnableAsync
+@Configuration
 public class AsyncProcessingConfig extends AsyncConfigurerSupport {
 
   @Value("${validation.threads.core}")
