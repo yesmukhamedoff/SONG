@@ -95,6 +95,18 @@ public class AnalysisController {
 //    return analysisService.updateAnalysis(studyId, analysis);
 //  }
 
+  @ApiOperation(value = "UnpublishAnalysis",
+      notes = "Unpublish an analysis")
+  @PutMapping(value="/unpublish/{id}")
+  @SneakyThrows
+  @PreAuthorize("@studySecurity.authorize(authentication, #studyId)")
+  public ResponseEntity<String> unpublishAnalysis(
+      @RequestHeader(value = AUTHORIZATION, required = false) final String accessToken,
+      @PathVariable("studyId") String studyId,
+      @PathVariable("id") String id){
+    return analysisService.unpublish(accessToken, studyId, id);
+  }
+
   @ApiOperation(value = "PublishAnalysis",
       notes = "Publish an analysis. This checks to see if the files associated "
       + "with the input analysisId exist in the storage server")
